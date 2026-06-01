@@ -40,18 +40,19 @@ export default function ChatPage() {
   }
 
   const startConversation = async (userId) => {
-    setLoading(true)
-    const res = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: [], userId })
-    })
-    const data = await res.json()
-    const initialMessage = { role: 'assistant', content: data.reply }
-    setMessages([initialMessage])
-    await saveConversation(userId, [initialMessage])
-    setLoading(false)
-  }
+  if (!userId) return
+  setLoading(true)
+  const res = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: [], userId })
+  })
+  const data = await res.json()
+  const initialMessage = { role: 'assistant', content: data.reply }
+  setMessages([initialMessage])
+  await saveConversation(userId, [initialMessage])
+  setLoading(false)
+}
 
   const saveConversation = async (userId, msgs) => {
     const { data: existing } = await supabase
