@@ -56,17 +56,29 @@ export default function LoginPage() {
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       
       {/* 1. Hero Section */}
-      <div className="px-6 pt-16 pb-12 bg-emerald-50 text-center">
-        <div className="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider uppercase text-emerald-700 bg-emerald-100 rounded-full">
-          SignalHealth Early Access
+      <div className="px-6 pt-12 pb-14 bg-emerald-50 text-center border-b border-emerald-100/30">
+        
+        {/* Prominent Brand Logo Header */}
+        <div className="flex items-center justify-center gap-2.5 mb-8">
+          <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm">
+            <span className="text-white text-base font-bold">♥</span>
+          </div>
+          <span className="text-xl font-bold tracking-tight text-gray-950">
+            Signal<span className="text-emerald-600">Health</span>
+          </span>
         </div>
-        <h1 className="text-3xl font-bold leading-tight text-gray-900 mb-4">
+
+        <div className="inline-block px-3 py-1 mb-5 text-xs font-semibold tracking-wider uppercase text-emerald-700 bg-emerald-100/80 rounded-full">
+          Early Access Participant
+        </div>
+        
+        <h1 className="text-3xl font-extrabold leading-tight text-gray-900 mb-4 max-w-xl mx-auto">
           Understand your health before something gets missed.
         </h1>
-        <p className="text-lg text-gray-600 max-w-md mx-auto mb-8">
+        <p className="text-base text-gray-600 max-w-md mx-auto mb-8 leading-relaxed">
           SignalHealth checks in regularly, builds your health story over time, and helps you know what’s worth discussing with a clinician.
         </p>
-        <a href="#auth-box" className="inline-block px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg hover:bg-emerald-700 transition-all">
+        <a href="#auth-box" className="inline-block px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-md hover:bg-emerald-700 transition-all">
           Get Started
         </a>
       </div>
