@@ -5,6 +5,10 @@ import { createClient } from '@supabase/supabase-js'
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 })
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+)
 
 async function extractProfile(messages) {
   const response = await anthropic.messages.create({
@@ -105,7 +109,7 @@ if (updatedMessages.length > 2) {
     if (profile.surgeries) updates.surgeries = profile.surgeries
     if (Object.keys(updates).length > 0) {
       updates.last_updated = new Date().toISOString()
-      const { error: profileError } = await supabase
+      const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .update(updates)
         .eq('id', userId)
