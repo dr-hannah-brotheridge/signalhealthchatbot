@@ -38,4 +38,4 @@ export default function SettingsPage() {
           <button
             onClick={handleChangePassword}
             disabled={loading}
-            className="w-full px-4 py-4 flex justify-between items-center border-b border-gray-50 hover:bg-gray-50 transition-colors"
+           className={`w-full px-4 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors ${i !== arr.length - 1 ? 'border-b border-gray-50' : ''}`}
