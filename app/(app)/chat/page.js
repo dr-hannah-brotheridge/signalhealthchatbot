@@ -1,30 +1,32 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { usePushNotifications } from '../hooks/usePushNotifications' // 1. Import the hook
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState(null)
-  const [isRedirecting, setIsRedirecting] = useState(false) // UI shield lock state
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const bottomRef = useRef(null)
+  
+  const { subscribeToPush } = usePushNotifications() // 2. Initialize the hook
 
+  // ... (keep your existing useEffects and functions here) ...
   useEffect(() => {
     const getUser = async () => {
-      // 1. FAST PATH ROUTING LOCKOUT: Prioritize password recovery over any session parsing
       const isRecovery = 
         window.location.hash.includes('type=recovery') || 
         window.location.href.includes('recovery') || 
         window.location.search.includes('type=recovery')
 
       if (isRecovery) {
-        setIsRedirecting(true) // Freeze execution layout instantly
+        setIsRedirecting(true)
         window.location.replace(`/login${window.location.hash}${window.location.search}`)
         return
       }
 
-      // 2. Normal Auth Gatekeepers
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
         window.location.replace('/login')
@@ -99,7 +101,6 @@ export default function ChatPage() {
     window.location.replace('/login')
   }
 
-  // Render shields to capture execution before UI tree parsing begins
   if (isRedirecting || !user) {
     return <div className="min-h-screen bg-white" />
   }
@@ -107,7 +108,7 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-screen pb-16">
       
-      {/* Brand Header Banner (Pale Green Layout) */}
+      {/* Brand Header Banner */}
       <div className="bg-emerald-50 border-b border-emerald-100/30 px-4 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
@@ -117,19 +118,30 @@ export default function ChatPage() {
             <span className="text-lg font-bold tracking-tight text-gray-950">
               Signal<span className="text-emerald-600">Health</span>
             </span>
-            <p className="text-xs text-gray-500 font-medium">Your health companion</p>
           </div>
         </div>
         
-        <button
-          onClick={handleLogout}
-          className="text-sm font-medium text-gray-500 hover:text-red-500 bg-white/60 hover:bg-white border border-gray-100 px-3 py-1.5 rounded-xl transition-colors shadow-sm"
-        >
-          Sign out
-        </button>
+        {/* 3. Added the Trigger Button here */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              const granted = await subscribeToPush()
+              if (granted) alert("Notifications enabled!")
+            }}
+            className="text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl transition-colors"
+          >
+            Enable Alerts
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-sm font-medium text-gray-500 hover:text-red-500 bg-white/60 hover:bg-white border border-gray-100 px-3 py-1.5 rounded-xl transition-colors shadow-sm"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
-      {/* Chat Messages */}
+      {/* ... (keep your existing Chat Messages and Chat Input Area) ... */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 max-w-2xl mx-auto w-full">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -158,7 +170,6 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Chat Input Area */}
       <div className="bg-white border-t border-gray-100 px-4 py-3 pb-4">
         <div className="max-w-2xl mx-auto flex gap-2">
           <input
