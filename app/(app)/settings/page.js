@@ -16,6 +16,10 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
+  // Controls Account Deletion flow
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('')
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.href = '/login'
@@ -23,7 +27,7 @@ export default function SettingsPage() {
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault()
-    setLoading(true)
+    loading(true)
     setMessage('')
     setIsError(false)
 
@@ -57,6 +61,32 @@ export default function SettingsPage() {
       setIsChangingPassword(false)
     }
     setLoading(false)
+  }
+
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault()
+    if (deleteConfirmationInput !== 'DELETE') {
+      setIsError(true)
+      setMessage('Please type DELETE to confirm.')
+      return
+    }
+
+    setLoading(true)
+    setMessage('')
+    setIsError(false)
+
+    // Invokes the secure database function we created in Step 1
+    const { error } = await supabase.rpc('delete_user_account')
+
+    if (error) {
+      setIsError(true)
+      setMessage(error.message)
+      setLoading(false)
+    } else {
+      // Clear out the auth session client-side and kick them back out to login
+      await supabase.auth.signOut()
+      window.location.href = '/login'
+    }
   }
 
   // Content for the legal modals
@@ -107,7 +137,7 @@ We use your information solely to:
 We do not sell, rent, or trade your personal or health data to any third parties.
 
 4. Data Processing and Storage
-Your profile information and chat history are securely stored in our database. Text information from your conversations is processed via secure Application Programming Interfaces (APIs) to generate your health summaries. Data processed through these APIs is protected under strict commercial privacy terms and is not used to train public AI models.
+Your profile information and chat history are securely stored in our database. Text information from your conversations is processed via secure Application Programming Interfaces (ABIs) to generate your health summaries. Data processed through these APIs is protected under strict commercial privacy terms and is not used to train public AI models.
 
 5. Your Rights Under New Zealand Law
 In accordance with the New Zealand Privacy Act 2020, you have the right to request access to any personal information we hold about you and to request corrections to that information. You can update your profile details or change your password directly within the application settings at any time.
@@ -127,7 +157,7 @@ By accessing or using SignalHealth, you agree to be bound by these Terms of Serv
 SignalHealth is a proactive AI health companion web application designed to help users track health insights, build a personal health profile, and organize summaries to assist with general practitioner (GP) consultations. SignalHealth does not provide medical advice, diagnosis, or treatment.
 
 3. Eligibility and Accounts
-You must provide accurate and complete information when creating an account. You are solely responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+ You must provide accurate and complete information when creating an account. You are solely responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
 
 4. User Conduct and Responsibilities
 You agree to use SignalHealth only for lawful personal purposes. You must not use the service to input false, malicious, or intentionally misleading health data. 
@@ -172,6 +202,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
           <button 
             onClick={() => {
               setIsChangingPassword(!isChangingPassword);
+              setIsDeletingAccount(false);
               setMessage('');
             }} 
             className="w-full px-4 py-4 flex justify-between items-center border-b border-gray-50 hover:bg-gray-50 transition-colors group"
@@ -234,10 +265,69 @@ We reserve the right to modify these terms at any time. Continued use of the app
           )}
 
           {/* Logout Button */}
-          <button onClick={handleLogout} className="w-full px-4 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors group">
-            <span className="text-base text-red-500">Sign Out</span>
+          <button onClick={handleLogout} className="w-full px-4 py-4 flex justify-between items-center border-b border-gray-50 hover:bg-gray-50 transition-colors group">
+            <span className="text-base text-gray-700">Sign Out</span>
             <span className="text-gray-300 group-hover:text-gray-400 transition-colors">›</span>
           </button>
+
+          {/* Delete Account Expandable Toggle */}
+          <button 
+            type="button"
+            onClick={() => {
+              setIsDeletingAccount(!isDeletingAccount);
+              setIsChangingPassword(false);
+              setMessage('');
+              setDeleteConfirmationInput('');
+            }} 
+            className="w-full px-4 py-4 flex justify-between items-center hover:bg-red-50/30 transition-colors group"
+          >
+            <span className="text-base text-red-500 font-medium">Delete Account</span>
+            <span className={`text-red-300 group-hover:text-red-400 transition-transform duration-200 ${isDeletingAccount ? 'rotate-90 text-red-500' : ''}`}>›</span>
+          </button>
+
+          {/* Delete Account Confirmation Block */}
+          {isDeletingAccount && (
+            <form onSubmit={handleDeleteAccount} className="p-4 bg-red-50/40 border-t border-gray-100 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wider">Warning: This action is irreversible</p>
+                <p className="text-sm text-gray-600">All data associated with your healthcare summaries, profiles, and chats will be permanently wiped.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs text-gray-500 block font-medium">
+                  Type <span className="font-bold text-gray-800">DELETE</span> below to confirm your request:
+                </label>
+                <input
+                  type="text"
+                  placeholder="DELETE"
+                  value={deleteConfirmationInput}
+                  onChange={e => setDeleteConfirmationInput(e.target.value)}
+                  required
+                  className="w-full border border-red-200 rounded-xl px-4 py-3 text-sm bg-white outline-none focus:border-red-500 transition-colors tracking-wide font-medium"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={loading || deleteConfirmationInput !== 'DELETE'}
+                  className="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-semibold text-sm rounded-xl py-2.5 transition-colors shadow-sm"
+                >
+                  {loading ? 'Deleting Profile...' : 'Permanently Delete Account'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsDeletingAccount(false);
+                    setDeleteConfirmationInput('');
+                  }}
+                  className="px-4 bg-white border border-gray-200 text-gray-500 font-medium text-sm rounded-xl py-2.5 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Global Operational Message Box */}
@@ -279,7 +369,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
       </div>
 
       {/* Pop-up Info Modal Component */}
-      {activeModal && (
+      {activeModal && modalContent[activeModal] && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full max-w-2xl rounded-t-3xl sm:rounded-2xl max-h-[85vh] sm:max-h-[80vh] flex flex-col shadow-xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
             

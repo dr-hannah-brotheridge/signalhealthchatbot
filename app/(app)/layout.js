@@ -12,15 +12,8 @@ export default function AppLayout({ children }) {
     { href: '/settings', label: 'Settings', icon: '⚙️' },
   ]
 
-  // Find the current active tab based on the URL path
-  const activeTab = tabs.find(tab => tab.href === pathname)
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      
-      {/* This updates your browser tab string dynamically based on the active tab */}
-      <title>{activeTab ? `${activeTab.label} | SignalHealth` : 'SignalHealth'}</title>
-      
       <div className="flex-1 overflow-hidden">
         {children}
       </div>
