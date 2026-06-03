@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
 // Helper function to convert your VAPID public key string into a format the browser requires
 function urlBase64ToUint8Array(base64String) {
@@ -13,29 +13,22 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export function usePushNotifications() {
-  const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-)
+  // Use the helper directly, it works with your existing setup
+  const supabase = createClientComponentClient()
 
   const subscribeToPush = async () => {
     try {
-      // 1. Verify that the browser actually supports push notifications
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.warn('Push notifications are not supported on this browser/device.')
         return null
       }
 
-      // 2. Wait for the service worker we created to be ready
       const registration = await navigator.serviceWorker.ready
-
-      // 3. Request permission from the user's phone OS
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') {
         throw new Error('Notification permission denied by user.')
       }
 
-      // 4. Generate the unique device subscription token using your VAPID Public Key
       const subscribeOptions = {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
@@ -44,13 +37,10 @@ export function usePushNotifications() {
       }
 
       let subscription = await registration.pushManager.getSubscription()
-      
-      // If the device isn't subscribed yet, create a new subscription token
       if (!subscription) {
         subscription = await registration.pushManager.subscribe(subscribeOptions)
       }
 
-      // 5. Save this token straight to your Supabase table
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User must be logged in to subscribe.')
 
@@ -61,7 +51,7 @@ export function usePushNotifications() {
           subscription: subscription.toJSON(),
         })
 
-      if (error && error.code !== '23505') { // Ignore duplicate keys error if they subscribe twice
+      if (error && error.code !== '23505') {
         throw error
       }
 
