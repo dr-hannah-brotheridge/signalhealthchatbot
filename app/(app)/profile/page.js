@@ -24,23 +24,49 @@ export default function ProfilePage() {
     getProfile()
   }, [])
 
+  // Safely strips [" "] brackets and formats database array structures into clean text
+  const formatProfileValue = (val) => {
+    if (!val) return null
+
+    // 1. If it's already a native JavaScript array, join them with commas
+    if (Array.isArray(val)) {
+      return val.length > 0 ? val.join(', ') : null
+    }
+
+    // 2. If it's stored as a stringified JSON array string, parse it first
+    if (typeof val === 'string' && val.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(val)
+        if (Array.isArray(parsed)) {
+          return parsed.length > 0 ? parsed.join(', ') : null
+        }
+      } catch (e) {
+        // Fallback if parsing fails
+      }
+    }
+
+    // 3. If it's just a normal plain string text or number, leave it exactly as is
+    return val
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center h-screen">
       <p className="text-gray-400 text-lg">Loading your profile...</p>
     </div>
   )
 
+  // We wrap each item with formatProfileValue() right here at the definition layer
   const fields = [
-    { label: 'Name', value: profile?.name },
-    { label: 'Age', value: profile?.age },
-    { label: 'Gender', value: profile?.gender },
-    { label: 'Ethnicity', value: profile?.ethnicity },
-    { label: 'Medications', value: profile?.medications },
-    { label: 'Known health problems', value: profile?.known_health_problems },
-    { label: 'Family history', value: profile?.family_history },
-    { label: 'Allergies', value: profile?.allergies },
-    { label: 'Alcohol and smoking', value: profile?.alcohol_and_smoking },
-    { label: 'Surgeries', value: profile?.surgeries },
+    { label: 'Name', value: formatProfileValue(profile?.name) },
+    { label: 'Age', value: formatProfileValue(profile?.age) },
+    { label: 'Gender', value: formatProfileValue(profile?.gender) },
+    { label: 'Ethnicity', value: formatProfileValue(profile?.ethnicity) },
+    { label: 'Medications', value: formatProfileValue(profile?.medications) },
+    { label: 'Known health problems', value: formatProfileValue(profile?.known_health_problems) },
+    { label: 'Family history', value: formatProfileValue(profile?.family_history) },
+    { label: 'Allergies', value: formatProfileValue(profile?.allergies) },
+    { label: 'Alcohol and smoking', value: formatProfileValue(profile?.alcohol_and_smoking) },
+    { label: 'Surgeries', value: formatProfileValue(profile?.surgeries) },
   ]
 
   return (
