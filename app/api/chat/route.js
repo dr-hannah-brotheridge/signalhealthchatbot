@@ -61,13 +61,30 @@ export async function POST(request) {
 
     const { messages, userId } = await request.json()
 
+    // Keep only last 15 messages, use health_story for older context
+    let messagesToSend = messages
+    if (messages.length > 15) {
+      messagesToSend = messages.slice(-15)
+    }
+
+    // Get health story for long term context
+    const { data: profileData } = await supabaseAdmin
+      .from('profiles')
+      .select('health_story')
+      .eq('id', userId)
+      .single()
+
+    const systemWithContext = profileData?.health_story
+      ? `${SYSTEM_PROMPT}\n\nLONG TERM HEALTH CONTEXT FOR THIS USER:\n${profileData.health_story}\n\nUse this context to maintain continuity but prioritise the recent conversation.`
+      : SYSTEM_PROMPT
+
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1000,
-      system: SYSTEM_PROMPT,
+      system: systemWithContext,
       messages: messages.length === 0
         ? [{ role: 'user', content: 'Hello, I am opening the app for the first time.' }]
-        : messages
+        : messagesToSend
     })
 
     const reply = response.content[0].text
@@ -94,35 +111,32 @@ export async function POST(request) {
         .insert({ user_id: userId, messages: updatedMessages })
     }
 
-    // Extract and save profile data in background
-    // Extract and save profile data
-if (updatedMessages.length > 2) {
-  const profile = await extractProfile(updatedMessages)
-  console.log('Extracted profile:', JSON.stringify(profile))
-  if (profile) {
-    const updates = {}
-    if (profile.name) updates.name = profile.name
-    if (profile.age) updates.age = profile.age
-    if (profile.gender) updates.gender = profile.gender
-    if (profile.ethnicity) updates.ethnicity = profile.ethnicity
-    if (profile.medications) updates.medications = profile.medications
-    if (profile.known_health_problems) updates.known_health_problems = profile.known_health_problems
-    if (profile.family_history) updates.family_history = profile.family_history
-    if (profile.allergies) updates.allergies = profile.allergies
-    if (profile.alcohol_and_smoking) updates.alcohol_and_smoking = profile.alcohol_and_smoking
-    if (profile.surgeries) updates.surgeries = profile.surgeries
-    if (profile.health_summary) updates.health_summary = profile.health_summary
-    if (profile.health_story) updates.health_story = profile.health_story
-    if (Object.keys(updates).length > 0) {
-      updates.last_updated = new Date().toISOString()
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .update(updates)
-        .eq('id', userId)
-      console.log('Profile update result:', profileError ? profileError.message : 'success')
+    // Extract and save profile data every 5 messages
+    if (updatedMessages.length > 2 && updatedMessages.length % 5 === 0) {
+      const profile = await extractProfile(updatedMessages)
+      if (profile) {
+        const updates = {}
+        if (profile.name) updates.name = profile.name
+        if (profile.age) updates.age = profile.age
+        if (profile.gender) updates.gender = profile.gender
+        if (profile.ethnicity) updates.ethnicity = profile.ethnicity
+        if (profile.medications) updates.medications = profile.medications
+        if (profile.known_health_problems) updates.known_health_problems = profile.known_health_problems
+        if (profile.family_history) updates.family_history = profile.family_history
+        if (profile.allergies) updates.allergies = profile.allergies
+        if (profile.alcohol_and_smoking) updates.alcohol_and_smoking = profile.alcohol_and_smoking
+        if (profile.surgeries) updates.surgeries = profile.surgeries
+        if (profile.health_summary) updates.health_summary = profile.health_summary
+        if (profile.health_story) updates.health_story = profile.health_story
+        if (Object.keys(updates).length > 0) {
+          updates.last_updated = new Date().toISOString()
+          await supabaseAdmin
+            .from('profiles')
+            .update(updates)
+            .eq('id', userId)
+        }
+      }
     }
-  }
-}
 
     return Response.json({ reply })
   } catch (err) {
