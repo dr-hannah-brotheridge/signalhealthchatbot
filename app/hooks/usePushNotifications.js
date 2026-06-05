@@ -72,7 +72,7 @@
 
         const subscribeOptions = {
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY),
+          applicationServerKey: urlBase64ToUint8Array(vapidKey),
         }
 
         console.log('⏳ Getting or creating push subscription...')
