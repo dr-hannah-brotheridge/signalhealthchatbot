@@ -8,12 +8,7 @@ console.log('🔧 Check-ins API Configuration:')
 console.log('  Supabase URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
 console.log('  Service Key:', supabaseServiceKey ? '✅ Set (length: ' + supabaseServiceKey.length + ')' : '❌ Missing')
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
 // Configure VAPID
 webpush.setVapidDetails(
