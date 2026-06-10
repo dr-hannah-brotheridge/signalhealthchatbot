@@ -166,7 +166,7 @@
           subscription = await registration.pushManager.subscribe(subscribeOptions)
           console.log('✅ New subscription created')
         } else {
-          console.log('ℹ️ Existing subscription found')
+          console.log('ℹ️ Existing subscription found in browser')
         }
 
         console.log('🔐 Checking authentication...')
@@ -180,29 +180,29 @@
         console.log('💾 Checking if subscription already exists in database...')
         const subscriptionData = subscription.toJSON()
         const endpoint = subscriptionData.endpoint
+        console.log('📍 Browser endpoint:', endpoint)
         
-        const { data: existingSubs } = await supabase
+        const { data: existingSubs, error: queryError } = await supabase
           .from('push_subscriptions')
           .select('id, subscription')
           .eq('user_id', user.id)
 
-        const matchingSub = existingSubs?.find(sub => sub.subscription?.endpoint === endpoint)
+        if (queryError) {
+          console.error('❌ Query error:', queryError)
+          return { success: false, error: `Failed to check existing subscriptions: ${queryError.message}` }
+        }
+
+        console.log('📊 Found', existingSubs?.length || 0, 'existing subscriptions in database')
+        
+        const matchingSub = existingSubs?.find(sub => {
+          const dbEndpoint = sub.subscription?.endpoint
+          console.log('🔍 Comparing:', dbEndpoint, '===', endpoint, dbEndpoint === endpoint)
+          return dbEndpoint === endpoint
+        })
 
         if (matchingSub) {
-          console.log('ℹ️ Subscription already exists in database, updating...')
-          
-          const { error: updateError } = await supabase
-            .from('push_subscriptions')
-            .update({ subscription: subscriptionData })
-            .eq('id', matchingSub.id)
-
-          if (updateError) {
-            console.error('❌ Update error:', updateError)
-            return { success: false, error: `Failed to update subscription: ${updateError.message}` }
-          }
-
-          console.log('✅ Subscription updated successfully')
-          return { success: true, message: 'Notifications updated successfully!' }
+          console.log('✅ Subscription already exists in database (ID:', matchingSub.id, ')')
+          return { success: true, message: 'Notifications already enabled!' }
         }
 
         console.log('💾 Saving new subscription to database...')

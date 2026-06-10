@@ -465,6 +465,8 @@ We reserve the right to modify these terms at any time. Continued use of the app
                     const newEnabled = e.target.checked
                     const oldEnabled = notificationPreferences.enabled
                     
+                    console.log('🔄 Toggle clicked:', { oldEnabled, newEnabled })
+                    
                     // Update state optimistically
                     setNotificationPreferences(prev => ({ ...prev, enabled: newEnabled }))
                     
@@ -473,6 +475,8 @@ We reserve the right to modify these terms at any time. Continued use of the app
                     setIsError(false)
                     try {
                       const { data: { session } } = await supabase.auth.getSession()
+                      console.log('📤 Sending to API:', { ...notificationPreferences, enabled: newEnabled })
+                      
                       const res = await fetch('/api/notification-preferences', {
                         method: 'POST',
                         headers: {
@@ -482,6 +486,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                         body: JSON.stringify({ ...notificationPreferences, enabled: newEnabled })
                       })
                       const data = await res.json()
+                      console.log('📥 API response:', data)
                       
                       if (data.success) {
                         setMessage(newEnabled ? 'Notifications enabled!' : 'Notifications disabled!')
@@ -490,13 +495,14 @@ We reserve the right to modify these terms at any time. Continued use of the app
                       } else {
                         setIsError(true)
                         setMessage(data.error || 'Failed to update')
+                        console.error('❌ API error:', data.error)
                         // Revert on error
                         setNotificationPreferences(prev => ({ ...prev, enabled: oldEnabled }))
                       }
                     } catch (error) {
                       setIsError(true)
                       setMessage('Failed to update')
-                      console.error('Error updating notification preferences:', error)
+                      console.error('❌ Error updating notification preferences:', error)
                       // Revert on error
                       setNotificationPreferences(prev => ({ ...prev, enabled: oldEnabled }))
                     }
