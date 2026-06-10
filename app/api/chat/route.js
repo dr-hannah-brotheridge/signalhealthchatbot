@@ -10,27 +10,39 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY
 )
 
-async function extractProfile(messages) {
+async function extractProfile(currentProfile, recentMessages) {
   try {
-    console.log('🔍 Profile extraction called with', messages.length, 'messages')
+    console.log('🔍 Profile extraction called with', recentMessages.length, 'recent messages')
+    console.log('📋 Current profile:', JSON.stringify(currentProfile, null, 2))
+    
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
       messages: [
         {
           role: 'user',
-        content: `Based on this conversation, extract any confirmed profile information and return ONLY a JSON object with these exact fields. Only include information the user has explicitly stated. Use null for anything not mentioned. Do not invent or infer anything.
+          content: `You are updating a patient's profile. You have:
+
+CURRENT PROFILE:
+${JSON.stringify(currentProfile, null, 2)}
+
+RECENT CONVERSATION (last 30 messages):
+${recentMessages.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+Your task:
+- Keep all information from the current profile
+- Add or update any new information from recent conversation
+- Remove information that is no longer relevant
+- Resolve any contradictions (prioritize newer information)
+- Return the complete updated profile
 
 Fields: name, age, gender, ethnicity, medications, known_health_problems, family_history, allergies, alcohol_and_smoking, surgeries, health_summary, health_story
 
 IMPORTANT: known_health_problems should ONLY include DIAGNOSED MEDICAL CONDITIONS (e.g., "migraines", "diabetes", "asthma", "hypertension") and RESOLVED ISSUES (e.g., "migraines resolved 3 months ago", "chest pain resolved after treatment"). Do NOT include current symptoms (e.g., "headache today", "chest pain", "blurred vision"). Current symptoms go in the health story narrative, not in known health problems.
 
-For health_summary: write a succinct clinical summary using natural flowing sentences. For example: "Hannah is a 28-year-old NZ European female with a known history of migraines, currently taking with lamotrigine. She also has a family history of heart disease." Only use confirmed onboarding details. Do not use markdown, asterisks, or dashes. If there isn't enough information yet, use null.
+For health_summary: write a succinct clinical summary using natural flowing sentences. For example: "Hannah is a 28-year-old NZ European female with a known history of migraines, currently managed with lamotrigine. She also has a family history of heart disease." Only use confirmed onboarding details. Do not use markdown, asterisks, or dashes. If there isn't enough information yet, use null.
 
 For health_story: write a succinct but comprehensive narrative summary covering everything discussed including symptoms, concerns, patterns, triggers, and any other health details mentioned in conversation. Update and replace this each time with the most complete picture. If there isn't enough information yet, use null.
-
-Conversation:
-${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
 Return only valid JSON, no other text.`
         }
@@ -126,7 +138,19 @@ export async function POST(request) {
     // Extract and save profile data every message after the first 2
     if (updatedMessages.length > 2) {
       console.log('📊 Profile update condition met at message', updatedMessages.length)
-      const profile = await extractProfile(updatedMessages)
+      
+      // Get current profile from database
+      const { data: currentProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      
+      // Only send last 30 messages for extraction to avoid JSON parsing errors
+      const recentMessages = updatedMessages.slice(-30)
+      console.log('📤 Sending last', recentMessages.length, 'messages for extraction')
+      
+      const profile = await extractProfile(currentProfile || {}, recentMessages)
       if (profile) {
         console.log('📝 Profile data extracted, building updates object...')
         const updates = {}
