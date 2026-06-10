@@ -461,7 +461,40 @@ We reserve the right to modify these terms at any time. Continued use of the app
                 <input
                   type="checkbox"
                   checked={notificationPreferences.enabled}
-                  onChange={(e) => setNotificationPreferences(prev => ({ ...prev, enabled: e.target.checked }))}
+                  onChange={async (e) => {
+                    const newEnabled = e.target.checked
+                    setNotificationPreferences(prev => ({ ...prev, enabled: newEnabled }))
+                    
+                    // Auto-save immediately
+                    setMessage('')
+                    setIsError(false)
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession()
+                      const res = await fetch('/api/notification-preferences', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({ ...notificationPreferences, enabled: newEnabled })
+                      })
+                      const data = await res.json()
+                      
+                      if (data.success) {
+                        setMessage(newEnabled ? 'Notifications enabled!' : 'Notifications disabled!')
+                      } else {
+                        setIsError(true)
+                        setMessage(data.error || 'Failed to update')
+                        // Revert on error
+                        setNotificationPreferences(prev => ({ ...prev, enabled: !newEnabled }))
+                      }
+                    } catch (error) {
+                      setIsError(true)
+                      setMessage('Failed to update')
+                      // Revert on error
+                      setNotificationPreferences(prev => ({ ...prev, enabled: !newEnabled }))
+                    }
+                  }}
                   className="sr-only"
                 />
                 <div className={`w-14 h-8 rounded-full transition-colors ${
