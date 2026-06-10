@@ -11,13 +11,15 @@ const supabaseAdmin = createClient(
 )
 
 async function extractProfile(messages) {
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 500,
-    messages: [
-      {
-        role: 'user',
-        content: `Based on this conversation, extract any confirmed profile information and return ONLY a JSON object with these exact fields. Only include information the user has explicitly stated. Use null for anything not mentioned. Do not invent or infer anything.
+  try {
+    console.log('🔍 Profile extraction called with', messages.length, 'messages')
+    const response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 500,
+      messages: [
+        {
+          role: 'user',
+          content: `Based on this conversation, extract any confirmed profile information and return ONLY a JSON object with these exact fields. Only include information the user has explicitly stated. Use null for anything not mentioned. Do not invent or infer anything.
 
 Fields: name, age, gender, ethnicity, medications, known_health_problems, family_history, allergies, alcohol_and_smoking, surgeries, health_summary, health_story
 
@@ -29,15 +31,17 @@ Conversation:
 ${messages.map(m => `${m.role}: ${m.content}`).join('\n')}
 
 Return only valid JSON, no other text.`
-      }
-    ]
-  })
+        }
+      ]
+    })
 
-  try {
     const text = response.content[0].text.trim()
     const clean = text.replace(/```json|```/g, '').trim()
-    return JSON.parse(clean)
-  } catch {
+    const parsed = JSON.parse(clean)
+    console.log('✅ Profile extraction successful:', JSON.stringify(parsed, null, 2))
+    return parsed
+  } catch (error) {
+    console.log('❌ Profile extraction error:', error.message)
     return null
   }
 }
@@ -117,10 +121,12 @@ export async function POST(request) {
         .insert({ user_id: userId, messages: updatedMessages })
     }
 
-    // Extract and save profile data every 5 messages
-    if (updatedMessages.length > 2 && updatedMessages.length % 5 === 0) {
+    // Extract and save profile data every 2 messages
+    if (updatedMessages.length > 2 && updatedMessages.length % 2 === 0) {
+      console.log('📊 Profile update condition met at message', updatedMessages.length)
       const profile = await extractProfile(updatedMessages)
       if (profile) {
+        console.log('📝 Profile data extracted, building updates object...')
         const updates = {}
         if (profile.name) updates.name = profile.name
         if (profile.age) updates.age = profile.age
@@ -134,14 +140,34 @@ export async function POST(request) {
         if (profile.surgeries) updates.surgeries = profile.surgeries
         if (profile.health_summary) updates.health_summary = profile.health_summary
         if (profile.health_story) updates.health_story = profile.health_story
+        
+        console.log('🔄 Updates object:', JSON.stringify(updates, null, 2))
+        
         if (Object.keys(updates).length > 0) {
           updates.last_updated = new Date().toISOString()
-          await supabaseAdmin
-            .from('profiles')
-            .update(updates)
-            .eq('id', userId)
+          console.log('💾 Attempting to update profile for user:', userId)
+          try {
+            const { error } = await supabaseAdmin
+              .from('profiles')
+              .update(updates)
+              .eq('id', userId)
+            
+            if (error) {
+              console.log('❌ Database update error:', error)
+            } else {
+              console.log('✅ Database update successful')
+            }
+          } catch (dbError) {
+            console.log('❌ Database update exception:', dbError)
+          }
+        } else {
+          console.log('⚠️ No fields to update - updates object is empty')
         }
+      } else {
+        console.log('⚠️ Profile extraction returned null')
       }
+    } else {
+      console.log('⏭️ Profile update not triggered (message count:', updatedMessages.length, ')')
     }
 
     return Response.json({ reply })
