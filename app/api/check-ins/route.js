@@ -2,13 +2,13 @@ import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 console.log('🔧 Check-ins API Configuration:')
 console.log('  Supabase URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
-console.log('  Service Key:', supabaseServiceKey ? '✅ Set (length: ' + supabaseServiceKey.length + ')' : '❌ Missing')
+console.log('  Anon Key:', supabaseAnonKey ? '✅ Set (length: ' + supabaseAnonKey.length + ')' : '❌ Missing')
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Configure VAPID
 webpush.setVapidDetails(
@@ -29,7 +29,7 @@ export async function GET(request) {
 
     // Get all conversations that need check-ins
     const now = new Date().toISOString()
-    const { data: conversations } = await supabaseAdmin
+    const { data: conversations } = await supabase
       .from('conversations')
       .select('user_id, next_check_in_at, is_proactive')
       .lte('next_check_in_at', now)
@@ -49,7 +49,7 @@ export async function GET(request) {
     for (const conversation of conversations) {
       try {
         // Get user's push subscriptions
-        const { data: subscriptions } = await supabaseAdmin
+        const { data: subscriptions } = await supabase
           .from('push_subscriptions')
           .select('subscription')
           .eq('user_id', conversation.user_id)
@@ -81,7 +81,7 @@ export async function GET(request) {
         const nextCheckIn = new Date()
         nextCheckIn.setDate(nextCheckIn.getDate() + (conversation.check_in_interval_days || 7))
         
-        await supabaseAdmin
+        await supabase
           .from('conversations')
           .update({ next_check_in_at: nextCheckIn.toISOString() })
           .eq('user_id', conversation.user_id)

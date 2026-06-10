@@ -2,13 +2,13 @@ import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 console.log('🔧 API Configuration:')
 console.log('  Supabase URL:', supabaseUrl ? '✅ Set' : '❌ Missing')
-console.log('  Service Key:', supabaseServiceKey ? '✅ Set (length: ' + supabaseServiceKey.length + ')' : '❌ Missing')
+console.log('  Anon Key:', supabaseAnonKey ? '✅ Set (length: ' + supabaseAnonKey.length + ')' : '❌ Missing')
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Configure VAPID
 webpush.setVapidDetails(
@@ -32,7 +32,7 @@ export async function POST(request) {
 
     // Get user's push subscription
     console.log('🔍 Querying database for subscriptions...')
-    const { data: subscriptions, error } = await supabaseAdmin
+    const { data: subscriptions, error } = await supabase
       .from('push_subscriptions')
       .select('subscription, user_id, created_at')
       .eq('user_id', userId)
@@ -51,7 +51,7 @@ export async function POST(request) {
       console.log('❌ No subscriptions found for user:', userId)
       
       // Debug: Check what subscriptions exist
-      const { data: allSubs } = await supabaseAdmin
+      const { data: allSubs } = await supabase
         .from('push_subscriptions')
         .select('user_id, created_at')
         .limit(5)
