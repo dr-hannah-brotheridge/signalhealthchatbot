@@ -85,15 +85,36 @@ export async function POST(request) {
       messagesToSend = messages.slice(-15)
     }
 
-    // Get health story for long term context
+    // Get complete profile for full context (not just health_story)
     const { data: profileData } = await supabaseAdmin
       .from('profiles')
-      .select('health_story')
+      .select('*')
       .eq('id', userId)
       .single()
 
-    const systemWithContext = profileData?.health_story
-      ? `${SYSTEM_PROMPT}\n\nLONG TERM HEALTH CONTEXT FOR THIS USER:\n${profileData.health_story}\n\nUse this context to maintain continuity but prioritise the recent conversation.`
+    // Build comprehensive profile context
+    let profileContext = ''
+    if (profileData) {
+      profileContext = `\n\nCURRENT USER PROFILE:
+Name: ${profileData.name || 'Not recorded'}
+Age: ${profileData.age || 'Not recorded'}
+Gender: ${profileData.gender || 'Not recorded'}
+Ethnicity: ${profileData.ethnicity || 'Not recorded'}
+Medications: ${profileData.medications || 'Not recorded'}
+Known Health Problems: ${profileData.known_health_problems || 'Not recorded'}
+Family History: ${profileData.family_history || 'Not recorded'}
+Allergies: ${profileData.allergies || 'Not recorded'}
+Alcohol & Smoking: ${profileData.alcohol_and_smoking || 'Not recorded'}
+Surgeries: ${profileData.surgeries || 'Not recorded'}
+
+HEALTH STORY:
+${profileData.health_story || 'Not yet recorded'}
+
+IMPORTANT: Use this profile information to maintain continuity. Do NOT ask about fields that are already recorded unless you need clarification or the user is specifically requesting to update them. The profile is automatically updated through conversation.`
+    }
+
+    const systemWithContext = profileContext
+      ? `${SYSTEM_PROMPT}${profileContext}`
       : SYSTEM_PROMPT
 
     const response = await anthropic.messages.create({
