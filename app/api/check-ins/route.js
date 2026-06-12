@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import webpush from 'web-push'
+import { DateTime } from 'luxon'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
@@ -23,51 +24,72 @@ function calculateNextCheckIn(preferences) {
     return null
   }
 
-  const now = new Date()
+  const userTimezone = preferences.timezone || 'UTC'
   const [hours, minutes] = preferences.time.split(':').map(Number)
   
-  // Create a date in the user's timezone
-  const userTimezone = preferences.timezone || 'UTC'
-  const userDate = new Date(now.toLocaleString('en-US', { timeZone: userTimezone }))
+  // Get current time in user's timezone
+  const userNow = DateTime.now().setZone(userTimezone)
   
-  // Set the time
-  userDate.setHours(hours, minutes, 0, 0)
+  // Create target time today in user's timezone
+  let targetTime = userNow.set({ 
+    hour: hours, 
+    minute: minutes, 
+    second: 0, 
+    millisecond: 0 
+  })
   
   // If the time has already passed today, move to next occurrence
-  if (userDate <= now) {
+  if (targetTime <= userNow) {
     switch (preferences.frequency) {
       case 'daily':
-        userDate.setDate(userDate.getDate() + 1)
+        targetTime = targetTime.plus({ days: 1 })
         break
       case 'weekly':
         if (preferences.days_of_week && preferences.days_of_week.length > 0) {
           // Find the next selected day
-          const currentDay = userDate.getDay()
+          const currentDay = targetTime.weekday % 7 // Convert to 0-6 (Sun-Sat)
           const sortedDays = [...preferences.days_of_week].sort((a, b) => a - b)
-          const nextDay = sortedDays.find(day => day > currentDay) || sortedDays[0]
-          const daysToAdd = nextDay > currentDay 
-            ? nextDay - currentDay 
-            : 7 - currentDay + nextDay
-          userDate.setDate(userDate.getDate() + daysToAdd)
+          
+          // Find next occurrence
+          let daysToAdd = null
+          for (const day of sortedDays) {
+            if (day > currentDay) {
+              daysToAdd = day - currentDay
+              break
+            }
+          }
+          
+          // If no day found after today, wrap to next week
+          if (daysToAdd === null) {
+            daysToAdd = 7 - currentDay + sortedDays[0]
+          }
+          
+          targetTime = targetTime.plus({ days: daysToAdd })
         } else {
-          userDate.setDate(userDate.getDate() + 7)
+          targetTime = targetTime.plus({ days: 7 })
         }
         break
       case 'monthly':
         const dayOfMonth = preferences.day_of_month || 1
-        const currentDayOfMonth = userDate.getDate()
+        const currentDayOfMonth = targetTime.day
+        
         if (dayOfMonth > currentDayOfMonth) {
-          userDate.setDate(dayOfMonth)
+          // Set to the target day this month
+          targetTime = targetTime.set({ day: dayOfMonth })
         } else {
-          userDate.setMonth(userDate.getMonth() + 1)
-          userDate.setDate(Math.min(dayOfMonth, new Date(userDate.getFullYear(), userDate.getMonth() + 1, 0).getDate()))
+          // Move to next month
+          targetTime = targetTime.plus({ months: 1 }).set({ day: 1 })
+          // Get the last day of the target month
+          const daysInMonth = targetTime.daysInMonth
+          // Set to target day or last day of month, whichever is smaller
+          targetTime = targetTime.set({ day: Math.min(dayOfMonth, daysInMonth) })
         }
         break
     }
   }
   
-  // Convert back to UTC for storage
-  return userDate.toISOString()
+  // Convert to UTC for storage
+  return targetTime.toUTC().toISO()
 }
 
 export async function GET(request) {

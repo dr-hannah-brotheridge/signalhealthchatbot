@@ -1,0 +1,17 @@
+  # 1. Define your prompt file
+  prompts:
+    - file://signal_health_prompt.txt
+
+  # 2. Tell Promptfoo how to inject the variables into your file
+  defaultTest:
+    options:
+      transform: "prompt + '\n\n' + vars.history"
+
+  # 3. Define the actual provider
+  providers:
+    - id: anthropic:messages:claude-sonnet-4-20250514
+      config:
+        temperature: 0.0
+        max_tokens: 1024
+
+

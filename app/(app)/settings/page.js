@@ -42,14 +42,30 @@ export default function SettingsPage() {
 
   const timezones = [
     'UTC',
-    'America/New_York',
-    'America/Los_Angeles',
-    'America/Chicago',
+    'Pacific/Auckland',
+    'Australia/Sydney',
+    'Australia/Melbourne',
+    'Australia/Brisbane',
+    'Australia/Perth',
+    'Asia/Tokyo',
+    'Asia/Shanghai',
+    'Asia/Hong_Kong',
+    'Asia/Singapore',
+    'Asia/Seoul',
+    'Asia/Kolkata',
+    'Asia/Dubai',
     'Europe/London',
     'Europe/Paris',
-    'Asia/Tokyo',
-    'Australia/Sydney',
-    'Pacific/Auckland'
+    'Europe/Berlin',
+    'Europe/Rome',
+    'Europe/Madrid',
+    'America/New_York',
+    'America/Chicago',
+    'America/Denver',
+    'America/Los_Angeles',
+    'America/Toronto',
+    'America/Vancouver',
+    'Pacific/Honolulu'
   ]
 
   useEffect(() => {
@@ -66,6 +82,20 @@ export default function SettingsPage() {
     }
     
     checkAuth()
+  }, [])
+
+  // Auto-detect user's timezone on component mount
+  useEffect(() => {
+    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    console.log('🌍 Detected timezone:', detectedTimezone)
+    
+    // Only set if the current timezone is the default UTC
+    if (notificationPreferences.timezone === 'UTC' && detectedTimezone) {
+      setNotificationPreferences(prev => ({
+        ...prev,
+        timezone: detectedTimezone
+      }))
+    }
   }, [])
 
   const loadNotificationPreferences = async (userId) => {
