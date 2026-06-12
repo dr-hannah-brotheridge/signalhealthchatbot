@@ -5,7 +5,7 @@
   "start_url": "/chat",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#059669",
+  "theme_color": "#0f766e",
   "icons": [
     {
       "src": "/icon.png",

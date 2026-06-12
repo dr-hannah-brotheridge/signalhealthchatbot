@@ -126,201 +126,173 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans">
+    <div className="min-h-screen bg-slate-50 text-gray-900 font-sans flex flex-col items-center justify-center px-4">
       
-      {authMode !== 'recovery' && (
-        <div className="px-6 pt-12 pb-14 bg-emerald-50 text-center border-b border-emerald-100/30">
-          <div className="flex items-center justify-center gap-2.5 mb-8">
-            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm">
-              <span className="text-white text-base font-bold">♥</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-gray-950">
-              Signal<span className="text-emerald-600">Health</span>
-            </span>
-          </div>
-
-          <div className="inline-block px-3 py-1 mb-5 text-xs font-semibold tracking-wider uppercase text-emerald-700 bg-emerald-100/80 rounded-full">
-            Early Access Participant
-          </div>
-          
-          <h1 className="text-3xl font-extrabold leading-tight text-gray-900 mb-4 max-w-xl mx-auto">
-            Understand your health before something gets missed.
-          </h1>
-          <p className="text-base text-gray-600 max-w-md mx-auto mb-8 leading-relaxed">
-            SignalHealth checks in regularly, builds your health story over time, and helps you know what’s worth discussing with a clinician.
-          </p>
-          <a href="#auth-box" className="inline-block px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-md hover:bg-emerald-700 transition-all">
-            Get Started
-          </a>
+      {/* Logo — matches app header format exactly */}
+      <div className="flex items-center gap-2.5 mb-8">
+        <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center shadow-sm">
+          <span className="text-white text-base font-bold">♥</span>
         </div>
-      )}
+        <span className="text-xl font-bold tracking-tight text-gray-950">
+          Signal<span className="text-teal-700">Health</span>
+        </span>
+      </div>
 
-      <div className="max-w-2xl mx-auto px-6 py-12 space-y-16">
+      {/* Auth Card */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         
-        {authMode !== 'recovery' && (
-          <>
-            <section>
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Healthcare shouldn't rely on one-off conversations.</h2>
-              <div className="grid gap-4">
-                {[
-                  "Checks in with you regularly",
-                  "Builds a personalised picture of your health over time",
-                  "Asks targeted questions based on your background and symptoms",
-                  "Helps you recognise patterns you might not notice",
-                  "Informs you what your doctor would like to know"
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                    <span className="text-emerald-600 font-bold text-lg">✓</span>
-                    <span className="text-gray-700 font-medium text-base">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="bg-emerald-950 text-white p-8 rounded-3xl shadow-md">
-              <h2 className="text-xl font-bold mb-4">They miss it because no one is connecting the dots.</h2>
-              <p className="text-emerald-100/90 leading-relaxed mb-6 text-base">
-                Ongoing fatigue, poor sleep, subtle changes—these are easy to overlook in day-to-day life, and hard to communicate in a short appointment.
-              </p>
-              <p className="text-lg font-semibold text-emerald-400 italic">
-                SignalHealth helps you notice earlier and explain it clearly.
-              </p>
-            </section>
-          </>
+        {authMode === 'recovery' ? (
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Choose a new password</h1>
+        ) : authMode === 'forgot' ? (
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Reset your password</h1>
+        ) : authMode === 'signup' ? (
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Create your account</h1>
+        ) : (
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome back</h1>
         )}
 
-        <section id="auth-box" className={authMode === 'recovery' ? 'pt-4' : 'pt-12 border-t border-gray-100'}>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 w-full max-w-md mx-auto">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                <span className="text-emerald-600 text-lg">♥</span>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">SignalHealth</h3>
-                <p className="text-sm text-gray-500">Secure Account Management</p>
-              </div>
+        {authMode === 'signin' && (
+          <p className="text-base text-slate-500 mb-6">Sign in to continue to your health companion.</p>
+        )}
+        {authMode === 'signup' && (
+          <p className="text-base text-slate-500 mb-6">Join SignalHealth to start building your health story.</p>
+        )}
+        {authMode === 'forgot' && (
+          <p className="text-base text-slate-500 mb-6">We'll send you a link to reset your password.</p>
+        )}
+        {authMode === 'recovery' && (
+          <p className="text-base text-slate-500 mb-6">Enter your new password below.</p>
+        )}
+
+        <form onSubmit={handleAuth} className="space-y-5">
+          
+          {authMode !== 'recovery' && (
+            <div>
+              <label htmlFor="email" className="block text-base font-medium text-slate-700 mb-1.5">
+                Email address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-lg outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 transition-colors bg-white"
+              />
             </div>
-
-            <h4 className="text-lg font-medium text-gray-900 mb-6">
-              {authMode === 'signup' && 'Create your account'}
-              {authMode === 'signin' && 'Welcome back'}
-              {authMode === 'forgot' && 'Reset your password'}
-              {authMode === 'recovery' && 'Choose a new password'}
-            </h4>
-
-            <form onSubmit={handleAuth} className="space-y-4">
-              
-              {authMode !== 'recovery' && (
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-base outline-none focus:border-emerald-500 transition-colors"
-                />
-              )}
-              
-              {authMode !== 'forgot' && (
-                <>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder={authMode === 'recovery' ? "Enter new password" : "Password"}
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
-                      required
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3.5 pr-12 text-base outline-none focus:border-emerald-500 transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none select-none"
-                    >
-                      {showPassword ? '⌣' : '👁'}
-                    </button>
-                  </div>
-
-                  {(authMode === 'signup' || authMode === 'recovery') && (
-                    <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder={authMode === 'recovery' ? "Repeat new password" : "Repeat password"}
-                        value={confirmPassword}
-                        onChange={e => setConfirmPassword(e.target.value)}
-                        required
-                        className="w-full border border-gray-200 rounded-xl px-4 py-3.5 text-base outline-none focus:border-emerald-500 transition-colors"
-                      />
-                    </div>
-                  )}
-
-                  {authMode === 'signin' && (
-                    <div className="text-right pt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => { setAuthMode('forgot'); setMessage(''); }}
-                        className="text-xs font-medium text-emerald-600 hover:underline focus:outline-none"
-                      >
-                        Forgot password?
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {message && (
-                <p className={`text-sm font-medium p-3 rounded-xl border animate-in fade-in duration-200 ${
-                  isError 
-                  ? 'text-red-600 bg-red-50 border-red-100' 
-                  : 'text-emerald-600 bg-emerald-50 border-emerald-100'
-                }`}>
-                  {isError ? '⚠️ ' : ''}{message}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl py-3.5 text-base font-semibold transition-colors disabled:opacity-50 shadow-sm"
-              >
-                {loading ? 'Please wait...' : authMode === 'signup' ? 'Create account' : authMode === 'forgot' ? 'Send recovery link' : authMode === 'recovery' ? 'Update Password' : 'Sign in'}
-              </button>
-            </form>
-
-            {authMode !== 'recovery' && (
-              <div className="text-sm text-gray-500 text-center mt-6 space-y-2">
-                {authMode === 'forgot' ? (
+          )}
+          
+          {authMode !== 'forgot' && (
+            <>
+              <div>
+                <label htmlFor="password" className="block text-base font-medium text-slate-700 mb-1.5">
+                  {authMode === 'recovery' ? 'New password' : 'Password'}
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 pr-14 text-lg outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 transition-colors bg-white"
+                  />
                   <button
                     type="button"
-                    onClick={() => { setAuthMode('signin'); setMessage(''); }}
-                    className="text-emerald-600 font-medium hover:underline focus:outline-none block mx-auto"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none select-none"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    Back to Sign In
+                    {showPassword ? '⌣' : '👁'}
                   </button>
-                ) : (
-                  <p>
-                    {authMode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthMode(authMode === 'signup' ? 'signin' : 'signup');
-                        setMessage('');
-                      }}
-                      className="text-emerald-600 ml-1 font-medium hover:underline focus:outline-none"
-                    >
-                      {authMode === 'signup' ? 'Sign in' : 'Sign up'}
-                    </button>
-                  </p>
-                )}
+                </div>
               </div>
-            )}
-          </div>
-        </section>
+
+              {(authMode === 'signup' || authMode === 'recovery') && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                  <label htmlFor="confirmPassword" className="block text-base font-medium text-slate-700 mb-1.5">
+                    {authMode === 'recovery' ? 'Repeat new password' : 'Repeat password'}
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type={showPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    required
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-lg outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-600/20 transition-colors bg-white"
+                  />
+                </div>
+              )}
+
+              {authMode === 'signin' && (
+                <div className="text-right">
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('forgot'); setMessage(''); }}
+                    className="text-sm font-medium text-teal-700 hover:text-teal-800 hover:underline focus:outline-none"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {message && (
+            <p className={`text-sm font-medium p-3 rounded-xl border animate-in fade-in duration-200 ${
+              isError 
+              ? 'text-red-600 bg-red-50 border-red-100' 
+              : 'text-teal-700 bg-teal-50 border-teal-100'
+            }`}>
+              {isError ? '⚠️ ' : '✓ '}{message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-teal-700 hover:bg-teal-800 text-white rounded-xl py-4 text-lg font-semibold transition-colors disabled:opacity-50 shadow-sm focus:ring-2 focus:ring-teal-700/30 focus:ring-offset-2 active:scale-[0.98]"
+          >
+            {loading ? 'Please wait...' : authMode === 'signup' ? 'Create account' : authMode === 'forgot' ? 'Send recovery link' : authMode === 'recovery' ? 'Update Password' : 'Sign in'}
+          </button>
+        </form>
 
         {authMode !== 'recovery' && (
-          <footer className="text-center pb-8 pt-4">
-            <p className="text-xs text-gray-400">© 2026 SignalHealth — Built for better healthcare conversations.</p>
-          </footer>
+          <div className="text-base text-slate-500 text-center mt-6">
+            {authMode === 'forgot' ? (
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signin'); setMessage(''); }}
+                className="text-teal-700 font-medium hover:underline focus:outline-none"
+              >
+                Back to Sign In
+              </button>
+            ) : (
+              <p>
+                {authMode === 'signup' ? 'Already have an account?' : "Don't have an account?"}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode(authMode === 'signup' ? 'signin' : 'signup');
+                    setMessage('');
+                  }}
+                  className="text-teal-700 ml-1 font-medium hover:underline focus:outline-none"
+                >
+                  {authMode === 'signup' ? 'Sign in' : 'Sign up'}
+                </button>
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Trust Footer */}
+      <div className="mt-8 text-center space-y-3">
+        <p className="text-sm text-slate-400 flex items-center justify-center gap-1.5">
+          <span>🔒</span> Your data is encrypted and private
+        </p>
+        {authMode !== 'recovery' && (
+          <p className="text-xs text-slate-300">© 2026 SignalHealth</p>
         )}
       </div>
     </div>

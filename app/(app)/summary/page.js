@@ -95,15 +95,15 @@ export default function SummaryPage() {
     <div className="flex flex-col min-h-screen pb-20 bg-gray-50">
       
       {/* Branded Header Banner */}
-      <div className="bg-emerald-50 border-b border-emerald-100/30 px-4 py-4">
+      <div className="bg-teal-50 border-b border-teal-100/30 px-4 py-4">
         <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center shadow-sm flex-shrink-0">
               <span className="text-white text-base font-bold">♥</span>
             </div>
             <div className="text-left">
               <span className="text-lg font-bold tracking-tight text-gray-950">
-                Signal<span className="text-emerald-600">Health</span>
+                Signal<span className="text-teal-700">Health</span>
               </span>
               <p className="text-xs text-gray-500 font-medium">GP Clinical Summary</p>
             </div>
@@ -123,7 +123,7 @@ export default function SummaryPage() {
           <button
             onClick={generateSummary}
             disabled={loading || !profile}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl py-4 text-base font-semibold disabled:opacity-50 transition-colors shadow-sm"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-2xl py-4 text-base font-semibold disabled:opacity-50 transition-colors shadow-sm"
           >
             {loading ? 'Generating your summary...' : 'Generate GP Summary'}
           </button>
@@ -147,8 +147,8 @@ export default function SummaryPage() {
 
             {/* Share Message Feedback */}
             {shareMessage && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 animate-in fade-in slide-in-from-top-2 duration-200">
-                <p className="text-sm text-emerald-800 text-center font-medium">
+              <div className="bg-teal-50 border border-teal-200 rounded-xl p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <p className="text-sm text-teal-800 text-center font-medium">
                   {shareMessage}
                 </p>
               </div>
@@ -158,7 +158,7 @@ export default function SummaryPage() {
               {/* Primary Share Button */}
               <button
                 onClick={handleShare}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3 text-base font-semibold transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-teal-700 hover:bg-teal-800 text-white rounded-2xl py-3 text-base font-semibold transition-colors shadow-sm flex items-center justify-center gap-2"
               >
                 <span>📤</span>
                 Share Summary
@@ -168,7 +168,7 @@ export default function SummaryPage() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={handleCopyToClipboard}
-                  className="border border-emerald-500 text-emerald-600 rounded-2xl py-3 text-sm font-medium hover:bg-emerald-50 transition-colors"
+                  className="border border-teal-500 text-teal-700 rounded-2xl py-3 text-sm font-medium hover:bg-teal-50 transition-colors"
                 >
                   📋 Copy
                 </button>

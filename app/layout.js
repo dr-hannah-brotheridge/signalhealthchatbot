@@ -15,7 +15,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#059669" />
+        <meta name="theme-color" content="#0f766e" />
       </head>
       <body className="min-h-full flex flex-col">
         <ClientLayout>{children}</ClientLayout>

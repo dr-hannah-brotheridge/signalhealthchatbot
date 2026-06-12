@@ -35,13 +35,13 @@ export default function AppLayout({ children }) {
                 >
                   {/* Micro-container for active state icon */}
                   <span className={`text-xl px-4 py-1 rounded-full transition-all ${
-                    active ? 'bg-emerald-50 scale-105' : 'bg-transparent'
+                    active ? 'bg-teal-50 scale-105' : 'bg-transparent'
                   }`}>
                     {tab.icon}
                   </span>
                   
                   <span className={`text-[11px] font-semibold tracking-wide transition-colors duration-200 ${
-                    active ? 'text-emerald-600' : 'text-gray-400'
+                    active ? 'text-teal-700' : 'text-gray-400'
                   }`}>
                     {tab.label}
                   </span>

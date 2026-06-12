@@ -182,14 +182,14 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-screen pb-16">
-      <div className="bg-emerald-50 border-b border-emerald-100/30 px-4 py-4 flex items-center justify-between gap-3">
+      <div className="bg-teal-50 border-b border-teal-100/30 px-4 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center shadow-sm flex-shrink-0">
             <span className="text-white text-base font-bold">♥</span>
           </div>
           <div className="text-left">
             <span className="text-lg font-bold tracking-tight text-gray-950">
-              Signal<span className="text-emerald-600">Health</span>
+              Signal<span className="text-teal-700">Health</span>
             </span>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function ChatPage() {
                   alert(result.error || "Failed to enable notifications")
                 }
               }}
-              className="text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-1.5 rounded-xl transition-colors"
+              className="text-xs font-medium text-teal-700 bg-teal-100 hover:bg-teal-200 px-3 py-1.5 rounded-xl transition-colors"
             >
               Enable Alerts
             </button>
@@ -268,7 +268,7 @@ export default function ChatPage() {
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`rounded-2xl px-4 py-3 max-w-xs lg:max-w-md text-base leading-relaxed ${
               msg.role === 'user'
-                ? 'bg-emerald-500 text-white rounded-br-sm'
+                ? 'bg-teal-600 text-white rounded-br-sm'
                 : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm'
             }`}>
               {msg.content.replace(/\*\*(.*?)\*\*/g, '$1').split('\n').map((line, i) => (
@@ -299,12 +299,12 @@ export default function ChatPage() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendMessage()}
             placeholder="Type a message..."
-            className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 text-base text-gray-900 placeholder-gray-400 outline-none focus:border-emerald-400 bg-white"
+            className="flex-1 border border-gray-200 rounded-2xl px-4 py-3 text-base text-gray-900 placeholder-gray-400 outline-none focus:border-teal-500 bg-white"
           />
           <button
             onClick={sendMessage}
             disabled={loading}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl px-5 py-3 text-base font-medium disabled:opacity-50 transition-colors"
+            className="bg-teal-600 hover:bg-teal-700 text-white rounded-2xl px-5 py-3 text-base font-medium disabled:opacity-50 transition-colors"
           >
             Send
           </button>

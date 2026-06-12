@@ -73,21 +73,21 @@ export default function ProfilePage() {
     <div className="flex flex-col min-h-screen pb-20 bg-gray-50">
       
       {/* Branded Header Banner */}
-      <div className="bg-emerald-50 border-b border-emerald-100/30 px-4 py-4 text-center sm:text-left">
+      <div className="bg-teal-50 border-b border-teal-100/30 px-4 py-4 text-center sm:text-left">
         <div className="max-w-2xl mx-auto w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center justify-center sm:justify-start gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center shadow-sm flex-shrink-0">
               <span className="text-white text-base font-bold">♥</span>
             </div>
             <div className="text-left">
               <span className="text-lg font-bold tracking-tight text-gray-950">
-                Signal<span className="text-emerald-600">Health</span>
+                Signal<span className="text-teal-700">Health</span>
               </span>
               <p className="text-xs text-gray-500 font-medium">My Health Profile</p>
             </div>
           </div>
           
-          <span className="hidden sm:block text-xs font-semibold text-emerald-700 bg-emerald-100/60 px-3 py-1 rounded-full border border-emerald-200/50">
+          <span className="hidden sm:block text-xs font-semibold text-teal-700 bg-teal-100/60 px-3 py-1 rounded-full border border-teal-200/50">
             Confidential
           </span>
         </div>
@@ -108,12 +108,12 @@ export default function ProfilePage() {
 
         {/* Health Summary */}
         {profile?.health_summary && (
-          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 shadow-sm">
-            <h2 className="text-base font-semibold text-emerald-800 mb-2">Health Summary</h2>
-            <p className="text-sm text-emerald-700 leading-relaxed font-medium italic">
+          <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 shadow-sm">
+            <h2 className="text-base font-semibold text-teal-800 mb-2">Health Summary</h2>
+            <p className="text-sm text-teal-700 leading-relaxed font-medium italic">
               "Built from your conversations with SignalHealth"
             </p>
-            <p className="text-sm text-emerald-700 leading-relaxed mt-2">{profile.health_summary}</p>
+            <p className="text-sm text-teal-700 leading-relaxed mt-2">{profile.health_summary}</p>
           </div>
         )}
 

@@ -326,15 +326,15 @@ We reserve the right to modify these terms at any time. Continued use of the app
     <div className="flex flex-col min-h-screen pb-20 bg-gray-50">
       
       {/* Branded Header Banner */}
-      <div className="bg-emerald-50 border-b border-emerald-100/30 px-4 py-4">
+      <div className="bg-teal-50 border-b border-teal-100/30 px-4 py-4">
         <div className="max-w-2xl mx-auto w-full flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center shadow-sm flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-teal-700 flex items-center justify-center shadow-sm flex-shrink-0">
               <span className="text-white text-base font-bold">♥</span>
             </div>
             <div className="text-left">
               <span className="text-lg font-bold tracking-tight text-gray-950">
-                Signal<span className="text-emerald-600">Health</span>
+                Signal<span className="text-teal-700">Health</span>
               </span>
               <p className="text-xs text-gray-500 font-medium">App Settings</p>
             </div>
@@ -373,7 +373,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   required
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm bg-white outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-12 text-sm bg-white outline-none focus:border-teal-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -390,14 +390,14 @@ We reserve the right to modify these terms at any time. Continued use of the app
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 required
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white outline-none focus:border-teal-500 transition-colors"
               />
 
               <div className="flex gap-2 pt-1">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl py-2.5 transition-colors disabled:opacity-50 shadow-sm"
+                  className="flex-1 bg-teal-700 hover:bg-teal-800 text-white font-semibold text-sm rounded-xl py-2.5 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   {loading ? 'Saving...' : 'Save New Password'}
                 </button>
@@ -497,7 +497,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                 <select
                   value={notificationPreferences.frequency}
                   onChange={(e) => setNotificationPreferences(prev => ({ ...prev, frequency: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-emerald-400 focus:outline-none"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-teal-500 focus:outline-none"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -517,7 +517,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                         onClick={() => handleDayToggle(day.value)}
                         className={`py-2 px-2 rounded-lg text-xs font-medium transition-colors ${
                           notificationPreferences.days_of_week.includes(day.value)
-                            ? 'bg-emerald-600 text-white'
+                            ? 'bg-teal-700 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -535,7 +535,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                   <select
                     value={notificationPreferences.day_of_month}
                     onChange={(e) => setNotificationPreferences(prev => ({ ...prev, day_of_month: parseInt(e.target.value) }))}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-emerald-400 focus:outline-none"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-teal-500 focus:outline-none"
                   >
                     {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                       <option key={day} value={day}>{day}{getOrdinalSuffix(day)}</option>
@@ -551,7 +551,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                   type="time"
                   value={notificationPreferences.time}
                   onChange={(e) => setNotificationPreferences(prev => ({ ...prev, time: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-emerald-400 focus:outline-none"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-teal-500 focus:outline-none"
                 />
               </div>
 
@@ -561,7 +561,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                 <select
                   value={notificationPreferences.timezone}
                   onChange={(e) => setNotificationPreferences(prev => ({ ...prev, timezone: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-emerald-400 focus:outline-none"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:border-teal-500 focus:outline-none"
                 >
                   {timezones.map(tz => (
                     <option key={tz} value={tz}>{tz}</option>
@@ -574,7 +574,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
                 <button
                   onClick={handleSaveNotificationPreferences}
                   disabled={savingPreferences}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl py-3 transition-colors disabled:opacity-50 shadow-sm"
+                  className="w-full bg-teal-700 hover:bg-teal-800 text-white font-semibold text-sm rounded-xl py-3 transition-colors disabled:opacity-50 shadow-sm"
                 >
                   {savingPreferences ? 'Saving...' : 'Save Schedule'}
                 </button>
@@ -587,7 +587,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
           <p className={`text-sm font-medium text-center py-2.5 px-4 rounded-xl border animate-in fade-in slide-in-from-top-1 ${
             isError 
               ? 'text-red-600 bg-red-50 border-red-100' 
-              : 'text-emerald-600 bg-emerald-50 border-emerald-100'
+              : 'text-teal-700 bg-teal-50 border-teal-100'
           }`}>
             {message}
           </p>
@@ -648,7 +648,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
             <div className="p-4 border-t border-gray-100 bg-white sticky bottom-0 rounded-b-2xl">
               <button 
                 onClick={() => setActiveModal(null)}
-                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base rounded-xl transition-colors shadow-sm"
+                className="w-full py-3.5 bg-teal-700 hover:bg-teal-800 text-white font-semibold text-base rounded-xl transition-colors shadow-sm"
               >
                 Close Window
               </button>
