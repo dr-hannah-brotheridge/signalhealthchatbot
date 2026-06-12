@@ -20,8 +20,8 @@ BEGIN
   SELECT * INTO response
   FROM http((
     'GET',
-    'https://your-app.vercel.app/api/check-ins',
-    ARRAY[http_header('Authorization', 'Bearer YOUR_CRON_SECRET')],
+    '- `https://signalhealth.dev/api/check-ins`',
+    ARRAY[http_header('Authorization', 'Bearer 1140413e1a6230e5e6e21484b8e1cae3edaa4fdc627b309ddfebfe5a974871e4')],
     'application/json',
     ''
   )::http_request);
