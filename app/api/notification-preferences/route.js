@@ -27,7 +27,7 @@ function calculateNextCheckIn(preferences) {
   })
   
   // If the time has already passed today, move to next occurrence
-  if (targetTime <= userNow) {
+  if (targetTime < userNow) {
     switch (preferences.frequency) {
       case 'daily':
         targetTime = targetTime.plus({ days: 1 })
