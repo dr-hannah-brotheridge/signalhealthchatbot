@@ -22,6 +22,13 @@ export default function LoginPage() {
       setAuthMode('recovery');
     }
 
+    // 2. Check for mode query parameter (e.g., ?mode=signup)
+    const urlParams = new URLSearchParams(window.location.search);
+    const modeParam = urlParams.get('mode');
+    if (modeParam === 'signup' && !isRecoveryInUrl) {
+      setAuthMode('signup');
+    }
+
     const checkUserSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       
