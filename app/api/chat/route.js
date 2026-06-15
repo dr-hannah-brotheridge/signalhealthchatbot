@@ -124,9 +124,9 @@ CRITICAL RULES:
    - Example: "[Name] is a [age]-year-old [ethnicity] [gender] with a known history of [diagnosed conditions] managed with [medications]."
    
    PARAGRAPH 2 (Active Concerns):
-   - List ALL current active concerns/symptoms with brief context
+   - List ALL current active concerns/symptoms with brief context using dashes, not numbered lists
    - Include: breast growth, ankle injury, heart palpitations, foot pain, dry eyes, etc.
-   - Example: "Active concerns include [symptom 1], [symptom 2], and [symptom 3]. [Brief context for each]."
+   - Example: "Active concerns include: - [symptom 1 with brief context]. - [symptom 2 with brief context]. - [symptom 3 with brief context]."
    
    PARAGRAPH 3 (Family History & Lifestyle):
    - Include: family history, lifestyle factors (alcohol, smoking, exercise)

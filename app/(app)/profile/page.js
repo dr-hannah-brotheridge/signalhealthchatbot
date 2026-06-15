@@ -226,37 +226,39 @@ export default function ProfilePage() {
           </a>
         )}
 
-        {/* Profile Completion Tracker */}
-        <div className="bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-200 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-start gap-3 mb-3">
-            <span className="text-2xl mt-0.5">📊</span>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="text-sm font-semibold text-teal-900">Profile Completion</h3>
-                <span className="text-lg font-bold text-teal-700">{completion.percentage}%</span>
+        {/* Profile Completion Tracker - Only show if less than 100% */}
+        {completion.percentage < 100 && (
+          <div className="bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-200 rounded-2xl p-4 shadow-sm">
+            <div className="flex items-start gap-3 mb-3">
+              <span className="text-2xl mt-0.5">📊</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-sm font-semibold text-teal-900">Profile Completion</h3>
+                  <span className="text-lg font-bold text-teal-700">{completion.percentage}%</span>
+                </div>
+                <p className="text-sm text-teal-800 leading-relaxed">
+                  {completion.completed} of {completion.total} core fields completed
+                </p>
               </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-full bg-teal-100 rounded-full h-2.5 mb-3 overflow-hidden">
+              <div 
+                className="bg-teal-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${completion.percentage}%` }}
+              />
+            </div>
+            
+            {/* Helpful message */}
+            <div className="flex items-start gap-2">
+              <span className="text-base mt-0.5">💡</span>
               <p className="text-sm text-teal-800 leading-relaxed">
-                {completion.completed} of {completion.total} core fields completed
+                <strong>Want to complete or update your profile?</strong> Check what's missing below and let me know in the chat!
               </p>
             </div>
           </div>
-          
-          {/* Progress Bar */}
-          <div className="w-full bg-teal-100 rounded-full h-2.5 mb-3 overflow-hidden">
-            <div 
-              className="bg-teal-600 h-2.5 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${completion.percentage}%` }}
-            />
-          </div>
-          
-          {/* Helpful message */}
-          <div className="flex items-start gap-2">
-            <span className="text-base mt-0.5">💡</span>
-            <p className="text-sm text-teal-800 leading-relaxed">
-              <strong>Want to complete or update your profile?</strong> Check what's missing below and let me know in the chat!
-            </p>
-          </div>
-        </div>
+        )}
 
         {/* Currently Tracking */}
         {activeSymptoms && activeSymptoms.length > 0 && (
