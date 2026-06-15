@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../../../lib/supabase'
 import SocialProofBanner from '../components/SocialProofBanner'
 import { calculateProfileCompletion } from '../../../lib/profileCompletion'
+import { jsPDF } from 'jspdf'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null)
@@ -10,6 +11,70 @@ export default function ProfilePage() {
   const [completion, setCompletion] = useState({ percentage: 0, completed: 0, total: 10 })
   const [showCheckInPrompt, setShowCheckInPrompt] = useState(false)
   const [healthStoryExpanded, setHealthStoryExpanded] = useState(false)
+
+  const downloadHealthStoryPDF = () => {
+    if (!profile?.health_story) return
+
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 20
+    const maxWidth = pageWidth - (margin * 2)
+    
+    // Add header
+    doc.setFontSize(18)
+    doc.setFont('helvetica', 'bold')
+    doc.text('SignalHealth', margin, 20)
+    
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Health Story', margin, 30)
+    
+    // Add patient info
+    doc.setFontSize(10)
+    doc.text(`Patient: ${profile.name || 'Not recorded'}`, margin, 40)
+    doc.text(`Date: ${new Date().toLocaleDateString('en-NZ')}`, margin, 46)
+    
+    // Add line separator
+    doc.setLineWidth(0.5)
+    doc.line(margin, 52, pageWidth - margin, 52)
+    
+    // Add health story content
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    
+    const paragraphs = profile.health_story.split('\n\n')
+    let yPosition = 62
+    
+    paragraphs.forEach((paragraph, index) => {
+      if (paragraph.trim()) {
+        const lines = doc.splitTextToSize(paragraph, maxWidth)
+        
+        // Check if we need a new page
+        if (yPosition + (lines.length * 6) > pageHeight - margin) {
+          doc.addPage()
+          yPosition = margin
+        }
+        
+        doc.text(lines, margin, yPosition)
+        yPosition += (lines.length * 6) + 6 // Add spacing between paragraphs
+      }
+    })
+    
+    // Add footer
+    doc.setFontSize(8)
+    doc.setTextColor(128, 128, 128)
+    doc.text(
+      'This document is generated from SignalHealth and should be reviewed with a qualified healthcare professional.',
+      margin,
+      pageHeight - 10,
+      { maxWidth: maxWidth, align: 'center' }
+    )
+    
+    // Download the PDF
+    const fileName = `HealthStory_${profile.name?.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+    doc.save(fileName)
+  }
 
   useEffect(() => {
     const getProfile = async () => {
@@ -226,22 +291,33 @@ export default function ProfilePage() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-semibold text-gray-800">Health Story</h2>
-              <button
-                onClick={() => setHealthStoryExpanded(!healthStoryExpanded)}
-                className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 transition-colors"
-              >
-                {healthStoryExpanded ? (
-                  <>
-                    <span>Show less</span>
-                    <span className="transform rotate-180 transition-transform">▼</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Read more</span>
-                    <span>▼</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={downloadHealthStoryPDF}
+                  className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                  title="Download as PDF"
+                >
+                  <span>📥</span>
+                  <span>Download PDF</span>
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  onClick={() => setHealthStoryExpanded(!healthStoryExpanded)}
+                  className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 transition-colors"
+                >
+                  {healthStoryExpanded ? (
+                    <>
+                      <span>Show less</span>
+                      <span className="transform rotate-180 transition-transform">▼</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Read more</span>
+                      <span>▼</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             
             <div className={`text-sm text-gray-600 leading-relaxed space-y-3 ${!healthStoryExpanded ? 'line-clamp-3' : ''}`}>

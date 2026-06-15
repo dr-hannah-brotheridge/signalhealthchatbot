@@ -115,8 +115,9 @@ Current Concerns: ONLY include ACTIVE, ONGOING issues that require attention NOW
 
 Resolved Issues: ONLY issues explicitly described as resolved, improving significantly, or no longer present
 - Include: Issues marked as "resolved", "improving", "better", "no longer bothering"
-- Format: Clean bulleted list
-- Examples: "Chest pain - resolved", "Blurred vision - no longer present", "Tailbone pain - improving well"
+- Format: Clean bulleted list WITHOUT redundantly stating "resolved" for each item
+- Since this section is titled "Resolved Issues", do NOT add "resolved" to each line
+- Examples: "Eye pain", "Blurred vision", "Chest pain", "Tailbone pain following fall from ladder"
 - If there are no resolved issues to report, you may omit this section entirely
 
 Relevant Medical History: ONLY include DIAGNOSED CHRONIC CONDITIONS and past surgeries

@@ -139,7 +139,7 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!input.trim() || loading || !user) return
-    const userMessage = { role: 'user', content: input }
+    const userMessage = { role: 'user', content: input, timestamp: new Date().toISOString() }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
     setInput('')
@@ -163,7 +163,7 @@ export default function ChatPage() {
       })
     })
     const data = await res.json()
-    const assistantMessage = { role: 'assistant', content: data.reply }
+    const assistantMessage = { role: 'assistant', content: data.reply, timestamp: new Date().toISOString() }
     const finalMessages = [...updatedMessages, assistantMessage]
     setMessages(finalMessages)
     setLoading(false)
@@ -263,6 +263,76 @@ export default function ChatPage() {
     loadConversation(user.id)
   }
 
+  const formatAppointmentType = (type) => {
+    if (!type) return type
+    
+    const formatted = type.trim().toLowerCase()
+    
+    // Common acronyms
+    if (formatted === 'gp') return 'GP'
+    if (formatted === 'ent') return 'ENT'
+    
+    // Common misspellings and abbreviations
+    const mappings = {
+      'cardielogit': 'Cardiologist',
+      'cardioligist': 'Cardiologist',
+      'cardiologist': 'Cardiologist',
+      'physio': 'Physiotherapist',
+      'phisio': 'Physiotherapist',
+      'physiotherapist': 'Physiotherapist',
+      'dentist': 'Dentist',
+      'dermatologist': 'Dermatologist',
+      'orthopedic': 'Orthopaedic Surgeon',
+      'orthopaedic': 'Orthopaedic Surgeon'
+    }
+    
+    if (mappings[formatted]) return mappings[formatted]
+    
+    // Default: Title Case
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+  }
+
+  const formatDateSeparator = (timestamp) => {
+    if (!timestamp) return null
+    
+    const messageDate = new Date(timestamp)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    
+    // Reset time to start of day for comparison
+    const messageDateOnly = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate())
+    const todayDateOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const yesterdayDateOnly = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate())
+    
+    if (messageDateOnly.getTime() === todayDateOnly.getTime()) {
+      return 'Today'
+    } else if (messageDateOnly.getTime() === yesterdayDateOnly.getTime()) {
+      return 'Yesterday'
+    } else {
+      // Format as "Monday, 10 June"
+      return messageDate.toLocaleDateString('en-NZ', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+      })
+    }
+  }
+
+  const shouldShowDateSeparator = (currentMsg, previousMsg) => {
+    if (!currentMsg.timestamp) return false
+    if (!previousMsg || !previousMsg.timestamp) return true
+    
+    const currentDate = new Date(currentMsg.timestamp)
+    const previousDate = new Date(previousMsg.timestamp)
+    
+    // Compare dates (ignoring time)
+    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+    const previousDateOnly = new Date(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate())
+    
+    return currentDateOnly.getTime() !== previousDateOnly.getTime()
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     window.location.replace('/login')
@@ -302,7 +372,7 @@ export default function ChatPage() {
           <div className="flex items-center gap-2 max-w-2xl mx-auto w-full">
             <span className="text-lg">📋</span>
             <span className="text-sm font-medium">
-              Preparing for {appointmentType} · {appointmentDate && new Date(appointmentDate).toLocaleDateString('en-NZ')}
+              Preparing for {formatAppointmentType(appointmentType)} · {appointmentDate && new Date(appointmentDate).toLocaleDateString('en-NZ')}
             </span>
             <button 
               onClick={exitPreAppointmentMode}
@@ -331,9 +401,19 @@ export default function ChatPage() {
         
         {messages.map((msg, i) => {
           const isPrepComplete = isPreAppointmentMode && msg.role === 'assistant' && msg.content.includes('Head to your Summary page and press Update')
+          const showDateSeparator = shouldShowDateSeparator(msg, messages[i - 1])
           
           return (
             <div key={i}>
+              {/* Date Separator */}
+              {showDateSeparator && (
+                <div className="flex items-center justify-center my-4">
+                  <div className="bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1 rounded-full">
+                    {formatDateSeparator(msg.timestamp)}
+                  </div>
+                </div>
+              )}
+              
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`rounded-2xl px-4 py-3 max-w-xs lg:max-w-md text-base leading-relaxed ${
                   msg.role === 'user'

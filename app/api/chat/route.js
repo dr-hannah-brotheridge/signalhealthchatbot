@@ -47,15 +47,23 @@ CRITICAL RULES:
    - EXCLUDE examples: "Dry eyes", "Chest pain", "Blurred vision", "Tailbone pain", "Rib issue"
    - These symptoms go in health_story, NOT known_health_problems
 
-2. health_summary: A concise clinical overview including:
-   - Demographics (age, gender, ethnicity)
-   - Diagnosed conditions only
-   - Current medications
-   - Key family history
-   - Lifestyle factors
-   - ALL current active concerns/symptoms (breast growth, ankle injury, heart palpitations, foot pain, etc.)
-   - Format as flowing prose, not a list
-   - Update this with every new concern mentioned
+2. health_summary: A concise clinical overview formatted as 3 distinct paragraphs:
+   
+   PARAGRAPH 1 (Demographics & Chronic Conditions):
+   - Include: age, gender, ethnicity, diagnosed chronic conditions, current medications
+   - Example: "[Name] is a [age]-year-old [ethnicity] [gender] with a known history of [diagnosed conditions] managed with [medications]."
+   
+   PARAGRAPH 2 (Active Concerns):
+   - List ALL current active concerns/symptoms with brief context
+   - Include: breast growth, ankle injury, heart palpitations, foot pain, dry eyes, etc.
+   - Example: "Active concerns include [symptom 1], [symptom 2], and [symptom 3]. [Brief context for each]."
+   
+   PARAGRAPH 3 (Family History & Lifestyle):
+   - Include: family history, lifestyle factors (alcohol, smoking, exercise)
+   - Example: "Family history includes [conditions]. Lifestyle factors: [details]."
+   
+   Separate each paragraph with \n\n
+   Update this with every new concern mentioned
 
 3. health_story: A comprehensive narrative covering:
    - Write in flowing narrative prose with varied sentence structure
