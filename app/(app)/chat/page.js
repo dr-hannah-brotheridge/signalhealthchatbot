@@ -412,19 +412,9 @@ export default function ChatPage() {
         
         {messages.map((msg, i) => {
           const isPrepComplete = isPreAppointmentMode && msg.role === 'assistant' && msg.content.includes('Head to your Summary page and press Update')
-          const showDateSeparator = shouldShowDateSeparator(msg, messages[i - 1])
           
           return (
             <div key={i}>
-              {/* Date Separator */}
-              {showDateSeparator && (
-                <div className="flex items-center justify-center my-4">
-                  <div className="bg-gray-100 text-gray-500 text-xs font-medium px-3 py-1 rounded-full">
-                    {formatDateSeparator(msg.timestamp)}
-                  </div>
-                </div>
-              )}
-              
               <div className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`rounded-2xl px-4 py-3 max-w-xs lg:max-w-md text-base leading-relaxed ${
                   msg.role === 'user'
