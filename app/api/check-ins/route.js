@@ -134,14 +134,22 @@ export async function GET(request) {
           continue
         }
 
+        // Get user's name from profiles
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('name')
+          .eq('id', pref.user_id)
+          .single()
+        
+        const userName = profile?.name || 'there'  // Fallback if no name
+
         // Send notification to all subscriptions
         for (const { subscription } of subscriptions) {
           try {
             await webpush.sendNotification(subscription, JSON.stringify({
-              title: '💚 Health Check-in',
-              body: "It's time for your health check-in! How are you feeling today?",
+              title: 'Health Check-in',
+              body: `Hey ${userName}, just checking in, how are you feeling today?`,
               icon: '/icon.png',
-              badge: '/icon.png',
               url: '/chat'
             }))
             sentCount++
