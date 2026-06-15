@@ -117,7 +117,11 @@ export default function SettingsPage() {
       const data = await res.json()
       
       if (data.preferences) {
-        setNotificationPreferences(data.preferences)
+        // Ensure symptom_alerts_enabled has a default value if not present
+        setNotificationPreferences({
+          ...data.preferences,
+          symptom_alerts_enabled: data.preferences.symptom_alerts_enabled ?? false
+        })
       }
     } catch (error) {
       console.error('Error loading notification preferences:', error)
@@ -681,30 +685,47 @@ We reserve the right to modify these terms at any time. Continued use of the app
               <button
                 onClick={async () => {
                   const newValue = !notificationPreferences.symptom_alerts_enabled
-                  setNotificationPreferences(prev => ({ ...prev, symptom_alerts_enabled: newValue }))
                   
-                  // Save immediately
+                  // Save immediately with updated value
                   setSavingPreferences(true)
+                  setIsError(false)
+                  setMessage('')
+                  
                   try {
                     const { data: { session } } = await supabase.auth.getSession()
+                    
+                    // Build the complete preferences object with the new value
+                    const updatedPreferences = {
+                      enabled: notificationPreferences.enabled,
+                      frequency: notificationPreferences.frequency,
+                      days_of_week: notificationPreferences.days_of_week,
+                      day_of_month: notificationPreferences.day_of_month,
+                      time: notificationPreferences.time,
+                      timezone: notificationPreferences.timezone,
+                      symptom_alerts_enabled: newValue
+                    }
+                    
                     const res = await fetch('/api/notification-preferences', {
                       method: 'POST',
                       headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${session.access_token}`
                       },
-                      body: JSON.stringify({ ...notificationPreferences, symptom_alerts_enabled: newValue })
+                      body: JSON.stringify(updatedPreferences)
                     })
                     
                     const data = await res.json()
                     
                     if (data.success) {
+                      // Update state with returned preferences to ensure sync
+                      setNotificationPreferences(data.preferences)
                       setMessage('Symptom alerts ' + (newValue ? 'enabled' : 'disabled') + ' successfully!')
                     } else {
                       setIsError(true)
                       setMessage(data.error || 'Failed to update preferences')
                     }
                   } catch (error) {
+                    console.error('Error updating symptom alerts:', error)
                     setIsError(true)
                     setMessage('Failed to update preferences')
                   } finally {
