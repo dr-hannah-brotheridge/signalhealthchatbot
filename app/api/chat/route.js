@@ -39,11 +39,43 @@ Your task:
 
 Fields: name, age, gender, ethnicity, medications, known_health_problems, family_history, allergies, alcohol_and_smoking, surgeries, health_summary, health_story
 
-IMPORTANT: known_health_problems should ONLY include DIAGNOSED MEDICAL CONDITIONS (e.g., "migraines", "diabetes", "asthma", "hypertension") and RESOLVED ISSUES (e.g., "migraines resolved 3 months ago", "chest pain resolved after treatment"). Do NOT include current symptoms (e.g., "headache today", "chest pain", "blurred vision"). Current symptoms go in the health story narrative, not in known health problems.
+CRITICAL RULES:
 
-For health_summary: write a succinct clinical summary using natural flowing sentences. For example: "Hannah is a 28-year-old NZ European female with a known history of migraines, currently managed with lamotrigine. She also has a family history of heart disease." Only use confirmed onboarding details. Do not use markdown, asterisks, or dashes. If there isn't enough information yet, use null.
+1. known_health_problems: ONLY include DIAGNOSED CHRONIC CONDITIONS
+   - Include: "Migraines", "Diabetes", "Asthma", "Heart condition", "Hypertension"
+   - EXCLUDE: Current symptoms, undiagnosed issues, injuries, resolved symptoms
+   - EXCLUDE examples: "Dry eyes", "Chest pain", "Blurred vision", "Tailbone pain", "Rib issue"
+   - These symptoms go in health_story, NOT known_health_problems
 
-For health_story: write a succinct but comprehensive narrative summary covering everything discussed including symptoms, concerns, patterns, triggers, and any other health details mentioned in conversation. Update and replace this each time with the most complete picture. If there isn't enough information yet, use null.
+2. health_summary: A concise clinical overview including:
+   - Demographics (age, gender, ethnicity)
+   - Diagnosed conditions only
+   - Current medications
+   - Key family history
+   - Lifestyle factors
+   - ALL current active concerns/symptoms (breast growth, ankle injury, heart palpitations, foot pain, etc.)
+   - Format as flowing prose, not a list
+   - Update this with every new concern mentioned
+
+3. health_story: A comprehensive narrative covering:
+   - Write in flowing narrative prose with varied sentence structure
+   - Group related information into logical paragraphs (2-4 sentences each)
+   - Separate paragraphs with \n\n
+   - Avoid repetitive naming - use pronouns after first mention in paragraph
+   - Start new paragraphs for different health topics
+   - Include: all symptoms (current and resolved), patterns, triggers, timeline, context
+   - Structure: General overview → Recurring issues → Recent concerns → Historical issues → Upcoming appointments
+   - Example paragraph structure:
+     
+     "[Name] is a [age]-year-old [ethnicity] [gender] presenting with multiple health concerns. [They/He/She] have a history of [condition] managed with [medication].
+     
+     The most prominent issue is [main concern]. This presents as [description] and occurs [frequency/pattern]. [Additional details about this issue].
+     
+     [They/He/She] also experience [second concern]. [Details]. [Context or timeline].
+     
+     Previously, [past issue]. This has [current status]. [Any relevant follow-up].
+     
+     [They/He/She] have an upcoming [appointment type] appointment on [date] to address [focus]."
 
 Return only valid JSON, no other text.`
         }

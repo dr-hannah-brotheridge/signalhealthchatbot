@@ -83,29 +83,14 @@ Surgeries: ${profile?.surgeries || 'None recorded'}
 Recent conversation highlights:
 ${recentMessages}
 
-CRITICAL MEDICATION RULE (Applies to ALL sections):
-When mentioning medications in ANY section of the summary (Current Concerns, Medications, Relevant Medical History, Suggested Discussion Points for GP):
-
-ONLY state medication purpose if:
-- The user explicitly said "I take [medication] for [condition]"
-- This is explicitly recorded in their profile
-
-DO NOT state medication purpose if:
-- The user only mentioned the medication name
-- The purpose is not explicitly stated or recorded
-- You are inferring it from symptoms or patterns
-
-Examples:
-- User said "I take lamotrigine for migraines" → OK to say "lamotrigine for migraines"
-- User only said "I take lamotrigine" → NOT OK to say "lamotrigine for migraines"
-- User has migraines and takes lamotrigine → NOT OK to say "lamotrigine for migraines" (inference)
-
-Do NOT infer or assume medication purposes. Only use information explicitly stated by the user.
+CRITICAL MEDICATION RULE:
+ONLY state medication purpose if explicitly stated by the user (e.g., "I take X for Y"). Do NOT infer medication purposes from symptoms or conditions.
 
 Generate a clear, structured GP summary using ONLY the following section headers exactly as written, followed by a colon. 
 
 Patient Overview:
 Current Concerns:
+Resolved Issues:
 Medications:
 Relevant Medical History:
 Family History:
@@ -116,11 +101,32 @@ CRITICAL FORMATTING RULES:
 1. Do NOT write a title like "**GP SUMMARY**" at the top. Jump straight into the "Patient Overview:" section.
 2. Do NOT use any asterisks (**), dashes (---), or symbols. 
 3. Separate each section with exactly one blank line.
-4. Within the "Current Concerns" and "Suggested Discussion Points for GP" sections, IF using numbered lists (1., 2., 3.) or hyphenated lists (-), add a blank line after each item for better readability.
+4. Within numbered lists (1., 2., 3.) or hyphenated lists (-), add a blank line after each item for better readability.
 5. End with a brief one-sentence factual disclaimer in plain text.
 
 SECTION-SPECIFIC RULES:
-Relevant Medical History: ONLY include DIAGNOSED MEDICAL CONDITIONS (e.g., migraines, diabetes, asthma, hypertension) and RESOLVED ISSUES (e.g., "migraines resolved 3 months ago"). Do NOT include current symptoms (e.g., headache today, chest pain, blurred vision). Current symptoms go in "Current Concerns" section.
+
+Current Concerns: ONLY include ACTIVE, ONGOING issues that require attention NOW
+- Include: New symptoms, worsening conditions, unresolved problems
+- Format: Numbered list with 1-2 sentence descriptions
+- EXCLUDE: Any issue marked as "improving", "resolved", "better", or "no longer present"
+- Examples to INCLUDE: "Breast growth - tender, noticed 1 week ago", "Ankle pain - worsening since injury", "Heart palpitations - occurring few times per week"
+- Examples to EXCLUDE: "Chest pain - improving", "Tailbone pain - resolved", "Eye pain - no longer present"
+
+Resolved Issues: ONLY issues explicitly described as resolved, improving significantly, or no longer present
+- Include: Issues marked as "resolved", "improving", "better", "no longer bothering"
+- Format: Clean bulleted list
+- Examples: "Chest pain - resolved", "Blurred vision - no longer present", "Tailbone pain - improving well"
+- If there are no resolved issues to report, you may omit this section entirely
+
+Relevant Medical History: ONLY include DIAGNOSED CHRONIC CONDITIONS and past surgeries
+- Include: Migraines, Heart condition, Diabetes, Asthma, etc.
+- EXCLUDE: Current symptoms (those go in Current Concerns)
+- EXCLUDE: Resolved temporary issues (those go in Resolved Issues if applicable)
+
+Suggested Discussion Points for GP: Based only on items in "Current Concerns"
+- Do NOT include resolved or improving issues
+- Focus on active concerns that need assessment or management
 `
         }
       ]
