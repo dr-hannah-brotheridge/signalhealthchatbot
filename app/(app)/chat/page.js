@@ -48,11 +48,49 @@ export default function ChatPage() {
       }
 
       setUser(session.user)
-      loadConversation(session.user.id)
+      await checkForActiveAppointment(session.user.id)
     }
     
     checkAuth()
   }, [])
+
+  const checkForActiveAppointment = async (userId) => {
+    // Check if there's an active appointment in the profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('upcoming_appointment_type, upcoming_appointment_date, upcoming_appointment_focus')
+      .eq('id', userId)
+      .single()
+
+    if (profile?.upcoming_appointment_type && profile?.upcoming_appointment_date) {
+      // There's an active pre-appointment session - restore it
+      setAppointmentType(profile.upcoming_appointment_type)
+      setAppointmentDate(profile.upcoming_appointment_date)
+      setAppointmentFocus(profile.upcoming_appointment_focus || '')
+      
+      // Load the most recent pre-appointment conversation
+      const { data: preApptConv } = await supabase
+        .from('conversations')
+        .select('messages, id')
+        .eq('user_id', userId)
+        .eq('conversation_type', 'pre_appointment')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single()
+      
+      if (preApptConv) {
+        setIsPreAppointmentMode(true)
+        setPreAppointmentConversationId(preApptConv.id)
+        setMessages(preApptConv.messages || [])
+      } else {
+        // Appointment exists but no conversation yet - load general
+        loadConversation(userId)
+      }
+    } else {
+      // No active appointment - load general conversation
+      loadConversation(userId)
+    }
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -130,12 +168,6 @@ export default function ChatPage() {
     setMessages(finalMessages)
     setLoading(false)
     
-    // Check for pre-appointment completion
-    if (isPreAppointmentMode && data.reply.includes('Head to your Summary page and press Update')) {
-      // Extract and save health updates
-      await extractAndSaveHealthUpdates(finalMessages)
-    }
-    
     // Check if we should show onboarding modal
     if (data.showOnboardingModal) {
       // Only show if not already dismissed or accepted
@@ -208,89 +240,6 @@ export default function ChatPage() {
     const initialMessage = { role: 'assistant', content: data.reply }
     setMessages([initialMessage])
     setLoading(false)
-  }
-
-  const extractAndSaveHealthUpdates = async (conversationMessages) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      const extractionResponse = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': process.env.NEXT_PUBLIC_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: `You are a medical data extraction assistant.
-Review this pre-appointment conversation and extract any NEW health information not already in the patient's profile.
-Return ONLY a JSON object with these fields (omit any field where nothing new was mentioned):
-{
-  "new_symptoms": "comma separated list of new symptoms mentioned",
-  "medication_changes": "any changes, new medications, or side effects mentioned",
-  "resolved_issues": "anything the patient says has improved or resolved",
-  "new_concerns": "any new worries or questions they raised",
-  "health_story_addition": "a 2-3 sentence paragraph summarising what was NEW in this conversation to append to their health story"
-}
-
-CURRENT PROFILE FOR REFERENCE:
-Known health problems: ${profile.known_health_problems || 'None'}
-Medications: ${profile.medications || 'None'}
-Health story: ${profile.health_story || 'None'}
-
-Only return NEW information not already captured. Return valid JSON only, no other text.`,
-          messages: [
-            {
-              role: 'user',
-              content: `Pre-appointment conversation:\n${conversationMessages.map(m => `${m.role}: ${m.content}`).join('\n')}`
-            }
-          ]
-        })
-      })
-
-      const data = await extractionResponse.json()
-      const text = data.content?.[0]?.text?.trim() || '{}'
-
-      try {
-        const updates = JSON.parse(text)
-        const profileUpdates = { last_updated: new Date().toISOString() }
-
-        if (updates.new_symptoms && profile.known_health_problems) {
-          profileUpdates.known_health_problems = profile.known_health_problems + ', ' + updates.new_symptoms
-        } else if (updates.new_symptoms) {
-          profileUpdates.known_health_problems = updates.new_symptoms
-        }
-
-        if (updates.medication_changes && profile.medications) {
-          profileUpdates.medications = profile.medications + ' — ' + updates.medication_changes
-        }
-
-        if (updates.health_story_addition && profile.health_story) {
-          profileUpdates.health_story = profile.health_story + '\n\n' + updates.health_story_addition
-        } else if (updates.health_story_addition) {
-          profileUpdates.health_story = updates.health_story_addition
-        }
-
-        if (Object.keys(profileUpdates).length > 1) {
-          await supabase
-            .from('profiles')
-            .update(profileUpdates)
-            .eq('id', user.id)
-        }
-      } catch (parseError) {
-        console.error('Failed to parse health extraction:', text)
-      }
-    } catch (error) {
-      console.error('Health extraction error:', error)
-    }
   }
 
   const exitPreAppointmentMode = async () => {

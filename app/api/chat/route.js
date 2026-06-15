@@ -190,8 +190,8 @@ IMPORTANT: Use this profile information to maintain continuity. Do NOT ask about
       }
     }
 
-    // Extract and save profile data every message after the first 2 (only for general conversations)
-    if (updatedMessages.length > 2 && conversationType === 'general') {
+    // Extract and save profile data every message after the first 2 (for all conversation types)
+    if (updatedMessages.length > 2) {
       console.log('📊 Profile update condition met at message', updatedMessages.length)
       
       // Get current profile from database
