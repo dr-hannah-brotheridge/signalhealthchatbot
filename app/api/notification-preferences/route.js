@@ -146,9 +146,9 @@ export async function POST(request) {
     console.log('✅ User authenticated:', user.id)
 
     const body = await request.json()
-    const { enabled, frequency, days_of_week, day_of_month, time, timezone } = body
+    const { enabled, frequency, days_of_week, day_of_month, time, timezone, symptom_alerts_enabled } = body
     
-    console.log('📝 Received data:', { enabled, frequency, days_of_week, day_of_month, time, timezone })
+    console.log('📝 Received data:', { enabled, frequency, days_of_week, day_of_month, time, timezone, symptom_alerts_enabled })
 
     // Calculate next check-in
     const nextCheckInAt = calculateNextCheckIn({
@@ -174,6 +174,7 @@ export async function POST(request) {
         day_of_month: day_of_month || 1,
         time: time || '09:00',
         timezone: timezone || 'UTC',
+        symptom_alerts_enabled: symptom_alerts_enabled !== undefined ? symptom_alerts_enabled : false,
         next_check_in_at: nextCheckInAt,
         updated_at: new Date().toISOString()
       }, {
