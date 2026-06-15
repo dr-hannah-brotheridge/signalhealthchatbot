@@ -139,7 +139,7 @@ export default function ChatPage() {
 
   const sendMessage = async () => {
     if (!input.trim() || loading || !user) return
-    const userMessage = { role: 'user', content: input, timestamp: new Date().toISOString() }
+    const userMessage = { role: 'user', content: input }
     const updatedMessages = [...messages, userMessage]
     setMessages(updatedMessages)
     setInput('')
@@ -163,7 +163,7 @@ export default function ChatPage() {
       })
     })
     const data = await res.json()
-    const assistantMessage = { role: 'assistant', content: data.reply, timestamp: new Date().toISOString() }
+    const assistantMessage = { role: 'assistant', content: data.reply }
     const finalMessages = [...updatedMessages, assistantMessage]
     setMessages(finalMessages)
     setLoading(false)
