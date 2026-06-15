@@ -40,15 +40,25 @@ export async function POST(request) {
 
     const { profile, userId } = await request.json()
 
-    // Get conversation history
-    const { data: conversation } = await supabase
+    // Get ALL conversation history (general + pre-appointment + other types)
+    const { data: conversations } = await supabase
       .from('conversations')
-      .select('messages')
+      .select('messages, conversation_type')
       .eq('user_id', userId)
-      .single()
+      .order('updated_at', { ascending: false })
 
-    const messages = conversation?.messages || []
-    const recentMessages = messages.slice(-20).map(m => `${m.role}: ${m.content}`).join('\n')
+    // Combine messages from all conversations, with most recent first
+    let allMessages = []
+    if (conversations && conversations.length > 0) {
+      conversations.forEach(conv => {
+        if (conv.messages && conv.messages.length > 0) {
+          allMessages.push(...conv.messages)
+        }
+      })
+    }
+    
+    // Take last 30 messages across all conversations for context
+    const recentMessages = allMessages.slice(-30).map(m => `${m.role}: ${m.content}`).join('\n')
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',

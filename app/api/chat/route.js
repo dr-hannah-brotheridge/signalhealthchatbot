@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { SYSTEM_PROMPT } from '../../../lib/prompt'
+import { buildPreAppointmentSystemPrompt } from '../../../lib/preAppointmentPrompt'
 import { createClient } from '@supabase/supabase-js'
 
 const anthropic = new Anthropic({
@@ -77,7 +78,7 @@ export async function POST(request) {
       }
     )
 
-    const { messages, userId } = await request.json()
+    const { messages, userId, conversationType = 'general', conversationId = null, appointmentType = null, appointmentDate = null, appointmentFocus = null } = await request.json()
 
     // Keep only last 15 messages, use health_story for older context
     let messagesToSend = messages
@@ -92,10 +93,22 @@ export async function POST(request) {
       .eq('id', userId)
       .single()
 
-    // Build comprehensive profile context
-    let profileContext = ''
-    if (profileData) {
-      profileContext = `\n\nCURRENT USER PROFILE:
+    // Build system prompt based on conversation type
+    let systemWithContext = SYSTEM_PROMPT
+    
+    if (conversationType === 'pre_appointment' && appointmentType && appointmentDate) {
+      // Use pre-appointment specialized prompt
+      systemWithContext = buildPreAppointmentSystemPrompt(
+        profileData,
+        appointmentType,
+        appointmentDate,
+        appointmentFocus
+      )
+    } else {
+      // Build comprehensive profile context for general chat
+      let profileContext = ''
+      if (profileData) {
+        profileContext = `\n\nCURRENT USER PROFILE:
 Name: ${profileData.name || 'Not recorded'}
 Age: ${profileData.age || 'Not recorded'}
 Gender: ${profileData.gender || 'Not recorded'}
@@ -111,11 +124,12 @@ HEALTH STORY:
 ${profileData.health_story || 'Not yet recorded'}
 
 IMPORTANT: Use this profile information to maintain continuity. Do NOT ask about fields that are already recorded unless you need clarification or the user is specifically requesting to update them. The profile is automatically updated through conversation.`
-    }
+      }
 
-    const systemWithContext = profileContext
-      ? `${SYSTEM_PROMPT}${profileContext}`
-      : SYSTEM_PROMPT
+      systemWithContext = profileContext
+        ? `${SYSTEM_PROMPT}${profileContext}`
+        : SYSTEM_PROMPT
+    }
 
     const response = await anthropic.messages.create({
   model: 'claude-sonnet-4-6',
@@ -142,25 +156,42 @@ IMPORTANT: Use this profile information to maintain continuity. Do NOT ask about
     let showOnboardingModal = false
 
     // Save conversation
-    const { data: existing } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('user_id', userId)
-      .single()
-
-    if (existing) {
+    if (conversationId) {
+      // Update specific conversation by ID (for pre-appointment mode)
       await supabase
         .from('conversations')
         .update({ messages: updatedMessages, updated_at: new Date().toISOString() })
-        .eq('user_id', userId)
+        .eq('id', conversationId)
     } else {
-      await supabase
+      // Handle general conversation
+      const { data: existing } = await supabase
         .from('conversations')
-        .insert({ user_id: userId, messages: updatedMessages })
+        .select('id')
+        .eq('user_id', userId)
+        .eq('conversation_type', conversationType)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (existing) {
+        await supabase
+          .from('conversations')
+          .update({ messages: updatedMessages, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+      } else {
+        await supabase
+          .from('conversations')
+          .insert({ 
+            user_id: userId, 
+            messages: updatedMessages,
+            conversation_type: conversationType,
+            is_proactive: false
+          })
+      }
     }
 
-    // Extract and save profile data every message after the first 2
-    if (updatedMessages.length > 2) {
+    // Extract and save profile data every message after the first 2 (only for general conversations)
+    if (updatedMessages.length > 2 && conversationType === 'general') {
       console.log('📊 Profile update condition met at message', updatedMessages.length)
       
       // Get current profile from database
