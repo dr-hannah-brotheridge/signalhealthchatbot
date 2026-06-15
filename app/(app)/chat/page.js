@@ -49,6 +49,19 @@ export default function ChatPage() {
 
       setUser(session.user)
       await checkForActiveAppointment(session.user.id)
+      
+      // Check for symptom follow-up notification
+      const params = new URLSearchParams(window.location.search)
+      const notificationType = params.get('type')
+      const symptomsParam = params.get('symptoms')
+
+      if (notificationType === 'symptom_followup' && symptomsParam) {
+        const symptomNames = symptomsParam.split(',')
+        await triggerSymptomFollowUpOpening(symptomNames, session.user.id)
+        
+        // Clean URL without reloading
+        window.history.replaceState({}, '', '/chat')
+      }
     }
     
     checkAuth()
@@ -96,6 +109,54 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+
+  const triggerSymptomFollowUpOpening = async (symptomNames, userId) => {
+    // Fetch user profile for personalised opening
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', userId)
+      .single()
+
+    // Build a personalised opening prompt for Claude
+    const openingPrompt = symptomNames.length === 1
+      ? `The user tapped a symptom follow-up notification about their ${symptomNames[0]}. 
+         Open the conversation warmly and ask specifically how their ${symptomNames[0]} is doing. 
+         Keep it short, warm, and conversational — just one question to start.`
+      : `The user tapped a symptom follow-up notification. They have multiple symptoms being tracked: ${symptomNames.join(', ')}.
+         Open the conversation warmly and ask about these symptoms naturally.
+         Start with just one — the most recently reported one.
+         Keep it short, warm, and conversational.`
+
+    setLoading(true)
+    try {
+      // Send a silent system-triggered message to Claude to get the opening line
+      const { data: { session } } = await supabase.auth.getSession()
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          systemTrigger: true,
+          triggerPrompt: openingPrompt,
+          userId
+        })
+      })
+
+      const data = await response.json()
+      
+      // Display Claude's opening message in the chat as if it arrived naturally
+      if (data.message) {
+        setMessages([{ role: 'assistant', content: data.message }])
+      }
+    } catch (error) {
+      console.error('Error triggering symptom follow-up opening:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const loadConversation = async (userId) => {
     // Load the most recent general conversation

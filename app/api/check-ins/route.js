@@ -18,6 +18,14 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 )
 
+// Helper function to check if scheduled check-in is within 24 hours
+function isScheduledCheckInWithin24Hours(userPref) {
+  if (!userPref.next_check_in_at) return false
+  const nextCheckIn = new Date(userPref.next_check_in_at)
+  const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
+  return nextCheckIn <= in24Hours
+}
+
 // Helper function to calculate next check-in based on preferences
 function calculateNextCheckIn(preferences) {
   if (!preferences.enabled || preferences.frequency === 'disabled') {
@@ -181,12 +189,139 @@ export async function GET(request) {
       }
     }
 
-    console.log(`✅ Job complete: ${sentCount} sent, ${failedCount} failed`)
+    console.log(`✅ Scheduled check-ins complete: ${sentCount} sent, ${failedCount} failed`)
+
+    // ─── SYMPTOM FOLLOW-UP SECTION ───────────────────────────────────────────────
+
+    const { data: symptomAlertUsers } = await supabaseAdmin
+      .from('notification_preferences')
+      .select('user_id, next_check_in_at, enabled, time, timezone, days_of_week, frequency')
+      .eq('symptom_alerts_enabled', true)
+      .eq('enabled', true)
+
+    let symptomNotificationsSent = 0
+    let symptomNotificationsFailed = 0
+
+    for (const userPref of symptomAlertUsers || []) {
+      try {
+        // Get overdue active symptoms for this user
+        const { data: overdueSymptoms } = await supabaseAdmin
+          .from('symptoms')
+          .select('*')
+          .eq('user_id', userPref.user_id)
+          .eq('status', 'active')
+          .lte('follow_up_due_at', new Date().toISOString())
+
+        if (!overdueSymptoms || overdueSymptoms.length === 0) continue
+
+        // Smart merge: skip if scheduled check-in due within 24 hours
+        // The scheduled check-in will handle symptom follow-up naturally
+        if (isScheduledCheckInWithin24Hours(userPref)) {
+          console.log(`⏭️ Skipping symptom follow-up for ${userPref.user_id} — scheduled check-in due soon`)
+          
+          // Still increment follow_up_count so auto-escalation works correctly
+          for (const symptom of overdueSymptoms) {
+            await supabaseAdmin
+              .from('symptoms')
+              .update({
+                follow_up_count: (symptom.follow_up_count || 0) + 1,
+                last_asked_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', symptom.id)
+          }
+          continue
+        }
+
+        // Auto-escalation: if follow_up_count >= 3 with no response, move to monitoring
+        const symptomsToEscalate = overdueSymptoms.filter(s => s.follow_up_count >= 3)
+        if (symptomsToEscalate.length > 0) {
+          await supabaseAdmin
+            .from('symptoms')
+            .update({
+              status: 'monitoring',
+              follow_up_due_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .in('id', symptomsToEscalate.map(s => s.id))
+          
+          console.log(`⬆️ Escalated ${symptomsToEscalate.length} symptoms to monitoring for user ${userPref.user_id}`)
+        }
+
+        // Only send notifications for symptoms not yet escalated
+        const symptomsToNotify = overdueSymptoms.filter(s => s.follow_up_count < 3)
+        if (symptomsToNotify.length === 0) continue
+
+        // Get push subscriptions
+        const { data: subscriptions } = await supabaseAdmin
+          .from('push_subscriptions')
+          .select('subscription')
+          .eq('user_id', userPref.user_id)
+
+        if (!subscriptions || subscriptions.length === 0) continue
+
+        // Build notification — include symptom names in the payload for chat auto-open
+        const symptomNames = symptomsToNotify.map(s => s.symptom_name)
+        const notificationBody = symptomNames.length === 1
+          ? `How is your ${symptomNames[0]} doing?`
+          : `Checking in on a few things: ${symptomNames.join(', ')}`
+
+        for (const { subscription } of subscriptions) {
+          try {
+            await webpush.sendNotification(
+              subscription,
+              JSON.stringify({
+                title: '💚 SignalHealth Check-in',
+                body: notificationBody,
+                icon: '/icon.png',
+                badge: '/icon.png',
+                url: '/chat',
+                type: 'symptom_followup',
+                // Pass symptom names so chat page can trigger automatic opening message
+                symptomNames: symptomNames
+              })
+            )
+            symptomNotificationsSent++
+            console.log(`✅ Symptom follow-up sent to user ${userPref.user_id}`)
+          } catch (err) {
+            symptomNotificationsFailed++
+            console.error(`❌ Push failed for user ${userPref.user_id}:`, err.message)
+            if (err.statusCode === 410) {
+              await supabaseAdmin
+                .from('push_subscriptions')
+                .delete()
+                .eq('user_id', userPref.user_id)
+            }
+          }
+        }
+
+        // Increment follow_up_count and update last_asked_at for notified symptoms
+        for (const symptom of symptomsToNotify) {
+          await supabaseAdmin
+            .from('symptoms')
+            .update({
+              follow_up_count: (symptom.follow_up_count || 0) + 1,
+              last_asked_at: new Date().toISOString(),
+              // Next follow-up in 3 days if no response
+              follow_up_due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', symptom.id)
+        }
+
+      } catch (err) {
+        console.error(`❌ Symptom follow-up error for user ${userPref.user_id}:`, err)
+        symptomNotificationsFailed++
+      }
+    }
+    
+    console.log(`✅ Symptom follow-ups complete: ${symptomNotificationsSent} sent, ${symptomNotificationsFailed} failed`)
+    // ─────────────────────────────────────────────────────────────────────────────
 
     return Response.json({
       message: 'Check-in notifications sent',
-      sent: sentCount,
-      failed: failedCount
+      scheduledCheckIns: { sent: sentCount, failed: failedCount },
+      symptomFollowUps: { sent: symptomNotificationsSent, failed: symptomNotificationsFailed }
     })
   } catch (error) {
     console.error('❌ Check-in job failed:', error)

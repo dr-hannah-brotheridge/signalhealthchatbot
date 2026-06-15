@@ -11,6 +11,76 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_KEY
 )
 
+async function extractSymptomsFromMessage(userMessage, recentMessages, userId) {
+  // Fetch existing active symptoms to avoid duplicates
+  const { data: existingSymptoms } = await supabaseAdmin
+    .from('symptoms')
+    .select('symptom_name')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+
+  const existingNames = existingSymptoms?.map(s => s.symptom_name).join(', ') || 'none yet'
+
+  try {
+    const extractionResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 200,
+        system: `You are a medical data extraction assistant.
+Review the user's message and recent conversation context.
+Identify any NEW symptoms or active health concerns being reported.
+
+Rules:
+- Return ONLY a JSON array of symptom name strings
+- Return empty array [] if no new symptoms found
+- Do NOT include these already tracked symptoms: ${existingNames}
+- Do NOT include medications, diagnoses, or conditions already being managed
+- Do NOT include general wellness complaints like tiredness unless described as persistent or concerning
+- Only include symptoms the user is actively experiencing right now
+- Keep symptom names short and clear e.g. "headache", "chest pain", "dry eyes", "nausea"
+
+Example output: ["headache", "blurred vision"]
+Return JSON array only. No other text. No markdown backticks.`,
+        messages: [
+          {
+            role: 'user',
+            content: `Recent conversation:\n${recentMessages}\n\nLatest user message: ${userMessage}`
+          }
+        ]
+      })
+    })
+
+    const data = await extractionResponse.json()
+    const text = data.content?.[0]?.text?.trim() || '[]'
+
+    const newSymptoms = JSON.parse(text)
+    if (!Array.isArray(newSymptoms) || newSymptoms.length === 0) return
+
+    const symptomRows = newSymptoms.map(symptomName => ({
+      user_id: userId,
+      symptom_name: symptomName,
+      status: 'active',
+      follow_up_count: 0,
+      follow_up_due_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    }))
+
+    await supabaseAdmin
+      .from('symptoms')
+      .insert(symptomRows)
+
+    console.log('✅ Extracted and stored', newSymptoms.length, 'new symptoms:', newSymptoms)
+  } catch (error) {
+    console.error('❌ Symptom extraction error:', error.message)
+    // Silent fail — never surface to user
+  }
+}
+
 async function extractProfile(currentProfile, recentMessages) {
   try {
     console.log('🔍 Profile extraction called with', recentMessages.length, 'recent messages')
@@ -118,7 +188,24 @@ export async function POST(request) {
       }
     )
 
-    const { messages, userId, conversationType = 'general', conversationId = null, appointmentType = null, appointmentDate = null, appointmentFocus = null } = await request.json()
+    const { messages, userId, conversationType = 'general', conversationId = null, appointmentType = null, appointmentDate = null, appointmentFocus = null, systemTrigger = false, triggerPrompt = null } = await request.json()
+
+    // Handle system-triggered opening messages for symptom follow-ups
+    if (systemTrigger && triggerPrompt) {
+      const response = await anthropic.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 150,
+        system: `You are SignalHealth, a warm personal health companion.
+${triggerPrompt}
+Respond with ONLY the opening message. No preamble. Just the message itself.
+Maximum 2 sentences. Warm and human.`,
+        messages: [{ role: 'user', content: 'start' }]
+      })
+      
+      return Response.json({ 
+        message: response.content[0].text 
+      })
+    }
 
     // Keep only last 15 messages, use health_story for older context
     let messagesToSend = messages
@@ -309,6 +396,18 @@ IMPORTANT: Use this profile information to maintain continuity. Do NOT ask about
       }
     } else {
       console.log('⏭️ Profile update not triggered (message count:', updatedMessages.length, ')')
+    }
+
+    // Extract symptoms from user message (background operation, non-blocking)
+    if (messages.length > 0 && conversationType !== 'pre_appointment') {
+      const lastMessage = messages[messages.length - 1]
+      if (lastMessage.role === 'user') {
+        const recentContext = messages.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n')
+        // Fire and forget - don't await
+        extractSymptomsFromMessage(lastMessage.content, recentContext, userId).catch(err => {
+          console.error('Background symptom extraction failed:', err)
+        })
+      }
     }
 
     return Response.json({ reply, showOnboardingModal })

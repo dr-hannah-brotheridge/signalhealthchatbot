@@ -14,7 +14,8 @@ export default function SettingsPage() {
     days_of_week: [1],
     day_of_month: 1,
     time: '09:00',
-    timezone: 'UTC'
+    timezone: 'UTC',
+    symptom_alerts_enabled: false
   })
   const [savingPreferences, setSavingPreferences] = useState(false)
   const { subscribeToPush, unsubscribeFromPush } = usePushNotifications()
@@ -658,7 +659,7 @@ We reserve the right to modify these terms at any time. Continued use of the app
               </div>
 
               {/* Save Button */}
-              <div className="px-4 py-4">
+              <div className="px-4 py-4 border-b border-gray-50">
                 <button
                   onClick={handleSaveNotificationPreferences}
                   disabled={savingPreferences || !notificationPreferences.enabled}
@@ -667,6 +668,62 @@ We reserve the right to modify these terms at any time. Continued use of the app
                   {savingPreferences ? 'Saving...' : 'Save Schedule'}
                 </button>
               </div>
+          
+              {/* Symptom Follow-Ups Toggle */}
+              <div className="px-4 py-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 pr-4">
+                <label className="text-sm font-medium text-gray-700 block mb-1">Symptom Follow-Ups</label>
+                <p className="text-xs text-gray-500">
+                  Get a check-in 3 days after you mention a new symptom. Stops automatically when symptoms resolve.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  const newValue = !notificationPreferences.symptom_alerts_enabled
+                  setNotificationPreferences(prev => ({ ...prev, symptom_alerts_enabled: newValue }))
+                  
+                  // Save immediately
+                  setSavingPreferences(true)
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession()
+                    const res = await fetch('/api/notification-preferences', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                      },
+                      body: JSON.stringify({ ...notificationPreferences, symptom_alerts_enabled: newValue })
+                    })
+                    
+                    const data = await res.json()
+                    
+                    if (data.success) {
+                      setMessage('Symptom alerts ' + (newValue ? 'enabled' : 'disabled') + ' successfully!')
+                    } else {
+                      setIsError(true)
+                      setMessage(data.error || 'Failed to update preferences')
+                    }
+                  } catch (error) {
+                    setIsError(true)
+                    setMessage('Failed to update preferences')
+                  } finally {
+                    setSavingPreferences(false)
+                  }
+                }}
+                disabled={!notificationPreferences.enabled || savingPreferences}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors disabled:opacity-50 ${
+                  notificationPreferences.symptom_alerts_enabled ? 'bg-teal-600' : 'bg-gray-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    notificationPreferences.symptom_alerts_enabled ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
             </>
           )}
         </div>

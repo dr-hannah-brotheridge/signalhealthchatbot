@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [completion, setCompletion] = useState({ percentage: 0, completed: 0, total: 10 })
   const [showCheckInPrompt, setShowCheckInPrompt] = useState(false)
   const [healthStoryExpanded, setHealthStoryExpanded] = useState(false)
+  const [activeSymptoms, setActiveSymptoms] = useState([])
 
   const downloadHealthStoryPDF = () => {
     if (!profile?.health_story) return
@@ -94,6 +95,18 @@ export default function ProfilePage() {
       if (data) {
         const completionData = calculateProfileCompletion(data)
         setCompletion(completionData)
+      }
+      
+      // Load active symptoms
+      const { data: symptomsData } = await supabase
+        .from('symptoms')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['active', 'monitoring'])
+        .order('first_reported_at', { ascending: false })
+      
+      if (symptomsData) {
+        setActiveSymptoms(symptomsData)
       }
       
       // Check if should show check-in prompt
@@ -244,6 +257,35 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
+
+        {/* Currently Tracking */}
+        {activeSymptoms && activeSymptoms.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <h2 className="text-base font-semibold text-gray-800 mb-3">Currently Tracking</h2>
+            <div className="space-y-2">
+              {activeSymptoms.map(symptom => (
+                <div key={symptom.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-800 capitalize">{symptom.symptom_name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Since {new Date(symptom.first_reported_at).toLocaleDateString('en-NZ', {
+                        day: 'numeric',
+                        month: 'long'
+                      })}
+                    </p>
+                  </div>
+                  <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                    symptom.status === 'monitoring' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {symptom.status === 'monitoring' ? '👁 monitoring' : '🔄 active'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Health Summary */}
         {profile?.health_summary && (
