@@ -57,8 +57,8 @@ export async function POST(request) {
       })
     }
     
-    // Take last 30 messages across all conversations for context
-    const recentMessages = allMessages.slice(-30).map(m => `${m.role}: ${m.content}`).join('\n')
+    // Take last 50 messages across all conversations for context (increased from 30 to capture all concerns)
+    const recentMessages = allMessages.slice(-50).map(m => `${m.role}: ${m.content}`).join('\n')
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',

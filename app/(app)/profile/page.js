@@ -249,10 +249,14 @@ export default function ProfilePage() {
         {profile?.health_summary && (
           <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4 shadow-sm">
             <h2 className="text-base font-semibold text-teal-800 mb-2">Health Summary</h2>
-            <p className="text-sm text-teal-700 leading-relaxed font-medium italic">
+            <p className="text-sm text-teal-700 leading-relaxed font-medium italic mb-3">
               "Built from your conversations with SignalHealth"
             </p>
-            <p className="text-sm text-teal-700 leading-relaxed mt-2">{profile.health_summary}</p>
+            <div className="text-sm text-teal-700 leading-relaxed space-y-3">
+              {profile.health_summary.split('\n\n').map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
           </div>
         )}
 
