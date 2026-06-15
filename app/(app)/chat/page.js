@@ -320,17 +320,28 @@ export default function ChatPage() {
   }
 
   const shouldShowDateSeparator = (currentMsg, previousMsg) => {
-    if (!currentMsg.timestamp) return false
-    if (!previousMsg || !previousMsg.timestamp) return true
+    // Don't show separator if current message has no timestamp
+    if (!currentMsg || !currentMsg.timestamp) return false
     
-    const currentDate = new Date(currentMsg.timestamp)
-    const previousDate = new Date(previousMsg.timestamp)
+    // Show separator if this is the first message or previous has no timestamp
+    if (!previousMsg || !previousMsg.timestamp) return false
     
-    // Compare dates (ignoring time)
-    const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
-    const previousDateOnly = new Date(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate())
-    
-    return currentDateOnly.getTime() !== previousDateOnly.getTime()
+    try {
+      const currentDate = new Date(currentMsg.timestamp)
+      const previousDate = new Date(previousMsg.timestamp)
+      
+      // Validate dates are valid
+      if (isNaN(currentDate.getTime()) || isNaN(previousDate.getTime())) return false
+      
+      // Compare dates (ignoring time)
+      const currentDateOnly = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate())
+      const previousDateOnly = new Date(previousDate.getFullYear(), previousDate.getMonth(), previousDate.getDate())
+      
+      return currentDateOnly.getTime() !== previousDateOnly.getTime()
+    } catch (error) {
+      console.error('Error comparing dates:', error)
+      return false
+    }
   }
 
   const handleLogout = async () => {
