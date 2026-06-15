@@ -101,8 +101,9 @@ CRITICAL FORMATTING RULES:
 1. Do NOT write a title like "**GP SUMMARY**" at the top. Jump straight into the "Patient Overview:" section.
 2. Do NOT use any asterisks (**), dashes (---), or symbols. 
 3. Separate each section with exactly one blank line.
-4. Within numbered lists (1., 2., 3.) or hyphenated lists (-), add a blank line after each item for better readability.
-5. End with a brief one-sentence factual disclaimer in plain text.
+4. For bulleted lists (-), keep items compact with NO blank lines between items.
+5. For numbered lists in Current Concerns, add a blank line after each item for readability.
+6. End with a brief one-sentence factual disclaimer in plain text.
 
 SECTION-SPECIFIC RULES:
 
