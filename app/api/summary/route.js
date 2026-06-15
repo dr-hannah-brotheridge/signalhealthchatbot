@@ -45,7 +45,7 @@ export async function POST(request) {
       .from('conversations')
       .select('messages, conversation_type')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('updated_at', { ascending: true })
 
     // Combine messages from all conversations, with most recent first
     let allMessages = []

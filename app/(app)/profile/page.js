@@ -9,6 +9,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [completion, setCompletion] = useState({ percentage: 0, completed: 0, total: 10 })
   const [showCheckInPrompt, setShowCheckInPrompt] = useState(false)
+  const [healthStoryExpanded, setHealthStoryExpanded] = useState(false)
 
   useEffect(() => {
     const getProfile = async () => {
@@ -223,8 +224,37 @@ export default function ProfilePage() {
         {/* Health Story */}
         {profile?.health_story && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <h2 className="text-base font-semibold text-gray-800 mb-2">Health Story</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">{profile.health_story}</p>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-semibold text-gray-800">Health Story</h2>
+              <button
+                onClick={() => setHealthStoryExpanded(!healthStoryExpanded)}
+                className="text-teal-600 hover:text-teal-700 text-sm font-medium flex items-center gap-1 transition-colors"
+              >
+                {healthStoryExpanded ? (
+                  <>
+                    <span>Show less</span>
+                    <span className="transform rotate-180 transition-transform">▼</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Read more</span>
+                    <span>▼</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            <div className={`text-sm text-gray-600 leading-relaxed space-y-3 ${!healthStoryExpanded ? 'line-clamp-3' : ''}`}>
+              {profile.health_story.split('\n\n').map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+            
+            {!healthStoryExpanded && profile.health_story.length > 200 && (
+              <div className="mt-2 text-xs text-gray-400 italic">
+                Click "Read more" to see full story
+              </div>
+            )}
           </div>
         )}
 
